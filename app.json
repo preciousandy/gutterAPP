@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Gutter App",
+    "slug": "gutter-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0E2050"
+    },
+    "scheme": "gutterapp",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nikimacsolutions.gutterapp"
+    },
+    "android": {
+      "package": "com.nikimacsolutions.gutterapp",
+      "adaptiveIcon": {
+        "backgroundColor": "#0E2050",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#0E2050"
+        }
+      ],
+      "expo-sharing"
+    ]
+  }
+}
