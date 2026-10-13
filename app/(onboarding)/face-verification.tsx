@@ -152,18 +152,23 @@ export default function FaceVerificationScreen() {
 
       // Step 3: Call backend API with the selfie
       setInstruction('Matching with your identity document…');
-      await submitFaceCheck(selfieUri);
+      const res = await submitFaceCheck(selfieUri);
 
-      // Step 4: Finalize 1:1 match
+      // Step 4: Finalize check
       setChecks((prev) => prev.map((c) => ({ ...c, done: true })));
       setProgress(100);
       setIsSuccess(true);
-      setInstruction('Face verification complete!');
+      const isPending = res.status === 'pending' || res.user?.kyc_status === 'pending';
+      setInstruction(
+        isPending
+          ? 'Submitted for compliance review!'
+          : 'Face verification complete!'
+      );
 
-      // Refresh auth user so kyc_status updates to 'verified' in state
+      // Refresh auth user so kyc_status updates in state
       await refreshUser().catch(() => undefined);
 
-      await new Promise((resolve) => setTimeout(resolve, 900));
+      await new Promise((resolve) => setTimeout(resolve, 1200));
 
       // Route to PIN creation if no PIN set, else home tabs
       if (user?.has_pin) {

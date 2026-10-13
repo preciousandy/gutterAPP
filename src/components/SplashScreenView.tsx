@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import {
   Animated,
   Dimensions,
-  Image,
   StyleSheet,
   Text,
   View,
@@ -169,11 +168,19 @@ export function SplashScreenView({
           ]}
         >
           <View style={styles.iconCard}>
-            <Image
-              source={require('../../assets/icon.png')}
-              style={styles.iconImage}
-              resizeMode="cover"
+            <LinearGradient
+              colors={['#172F6E', '#0D1B43']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
             />
+            {/* Subtle inner top-edge glass rim highlight */}
+            <View style={styles.iconHighlight} />
+
+            <View style={styles.emblemRow}>
+              <Text style={styles.emblemLetter}>G</Text>
+              <View style={styles.emblemMintDot} />
+            </View>
           </View>
         </Animated.View>
 
@@ -285,9 +292,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconImage: {
-    width: '100%',
-    height: '100%',
+  iconHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '48%',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+  },
+  emblemRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  emblemLetter: {
+    fontFamily: 'SpaceGrotesk_700Bold',
+    fontSize: 56,
+    lineHeight: 62,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -1,
+  },
+  emblemMintDot: {
+    width: 9.5,
+    height: 9.5,
+    borderRadius: 4.75,
+    backgroundColor: colors.mint,
+    marginLeft: 3,
+    marginBottom: 8,
   },
   textBlock: {
     alignItems: 'center',

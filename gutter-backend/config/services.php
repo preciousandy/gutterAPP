@@ -65,4 +65,10 @@ return [
         'webhook_url' => env('PALMPAY_WEBHOOK_URL', 'https://cloudnet.icu/api/v1/webhooks/palmpay'),
     ],
 
+    'prembly' => [
+        'base_url' => env('PREMBLY_BASE_URL', 'https://api.prembly.com'),
+        'api_key' => env('PREMBLY_API_KEY', 'live_sk_bed5e2a3a4d04e0ebeafcb20cbe9a68a'),
+        'app_id' => env('PREMBLY_APP_ID', 'live_pk_3cf9b264a9a0469fa2b32e74733dce33'),
+    ],
+
 ];

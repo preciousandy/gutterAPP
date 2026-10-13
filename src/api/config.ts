@@ -1,7 +1,23 @@
 import { api } from './client';
 
+export interface FeeSetting {
+  key?: string;
+  service_key?: string;
+  label?: string;
+  category?: string;
+  category_label?: string;
+  icon?: string;
+  is_enabled: boolean;
+  flat_fee: number;
+  percent_fee: number;
+  description?: string;
+  updated_by?: string;
+  updated_at?: string | null;
+}
+
 export interface AppConfig {
-  features: {
+  status?: string;
+  features?: {
     feature_airtime?: boolean;
     feature_data?: boolean;
     feature_cable_tv?: boolean;
@@ -19,6 +35,7 @@ export interface AppConfig {
     system_announcement_active?: boolean;
     [key: string]: boolean | undefined;
   };
+  fees?: Record<string, FeeSetting>;
   maintenance: boolean;
 }
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -20,6 +21,7 @@ import {
   getBillPlans,
   type NetworkProvider,
 } from '@/api/bills';
+import { NETWORK_LOGOS } from '@/constants/networkAssets';
 import {
   getAirtimeBeneficiaries,
   saveAirtimeBeneficiary,
@@ -30,6 +32,7 @@ import { useWallet } from '@/context';
 import { setPendingAction } from '@/lib/pendingAction';
 import { colors } from '@/theme';
 import { formatNaira } from '@/utils/format';
+import { pickContactPhoneNumber } from '@/utils/contacts';
 
 interface BillsModalProps {
   visible: boolean;
@@ -210,6 +213,18 @@ export function BillsModal({ visible, onClose }: BillsModalProps) {
         setDismissSuggestions(false);
       }
     }
+  };
+
+  const handleSelectContact = async () => {
+    await pickContactPhoneNumber((selected) => {
+      setPhone(selected.phone);
+      setDismissSuggestions(true);
+      setError(null);
+      const detected = detectNigerianNetwork(selected.phone);
+      if (detected) {
+        setNetwork(detected);
+      }
+    });
   };
 
   const handleSelectPlan = (plan: DataPlan) => {
@@ -466,10 +481,12 @@ export function BillsModal({ visible, onClose }: BillsModalProps) {
                       isSelected ? styles.networkBtnActive : styles.networkBtnInactive,
                     ]}
                   >
-                    <View style={[styles.networkBadge, { backgroundColor: n.bg }]}>
-                      <Text style={[styles.networkBadgeText, { color: n.text }]}>
-                        {n.name[0]}
-                      </Text>
+                    <View style={styles.networkLogoContainer}>
+                      <Image
+                        source={NETWORK_LOGOS[n.key]}
+                        style={styles.networkLogoImage}
+                        resizeMode="contain"
+                      />
                     </View>
                     <Text
                       style={[
@@ -495,6 +512,10 @@ export function BillsModal({ visible, onClose }: BillsModalProps) {
                       <Text style={styles.matchBadgeText}>{detectedNetwork}</Text>
                     </View>
                   ) : null}
+                  <Pressable onPress={handleSelectContact} style={styles.contactBtn}>
+                    <Ionicons name="person-circle-outline" size={13} color={colors.navy} />
+                    <Text style={styles.contactBtnText}>Contacts</Text>
+                  </Pressable>
                   <Pressable onPress={handlePastePhone} style={styles.pasteBtn}>
                     <Text style={styles.pasteBtnText}>Paste</Text>
                   </Pressable>
@@ -520,19 +541,29 @@ export function BillsModal({ visible, onClose }: BillsModalProps) {
                   maxLength={11}
                   style={styles.phoneInput}
                 />
-                {phone.length > 0 ? (
+                <View style={styles.inputEndActions}>
+                  {phone.length > 0 ? (
+                    <Pressable
+                      onPress={() => {
+                        setPhone('');
+                        setError(null);
+                        setDismissSuggestions(false);
+                      }}
+                      hitSlop={8}
+                      style={styles.clearPhoneBtn}
+                    >
+                      <Ionicons name="close-circle" size={17} color={colors.inkMuted} />
+                    </Pressable>
+                  ) : null}
                   <Pressable
-                    onPress={() => {
-                      setPhone('');
-                      setError(null);
-                      setDismissSuggestions(false);
-                    }}
+                    onPress={handleSelectContact}
                     hitSlop={8}
-                    style={styles.clearPhoneBtn}
+                    style={styles.contactIconBtn}
+                    accessibilityLabel="Select contact from phone"
                   >
-                    <Ionicons name="close-circle" size={17} color={colors.inkMuted} />
+                    <Ionicons name="book-outline" size={17} color={colors.navy} />
                   </Pressable>
-                ) : null}
+                </View>
               </View>
 
               {/* Predictive Autocomplete Suggestions on 4+ Digits */}
@@ -991,6 +1022,23 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 10,
   },
+  networkLogoContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+    overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: 'rgba(0,0,0,0.08)',
+  },
+  networkLogoImage: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+  },
   networkBtnText: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 12,
@@ -1014,16 +1062,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  contactBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3.5,
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
+    borderRadius: 8,
+  },
+  contactBtnText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 10.5,
+    color: colors.navy,
+  },
   pasteBtn: {
     backgroundColor: colors.chip,
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 2.5,
     borderRadius: 8,
   },
   pasteBtnText: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 10.5,
     color: colors.navy,
+  },
+  inputEndActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  contactIconBtn: {
+    padding: 3,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 6,
   },
   phoneInputRow: {
     marginTop: 8,

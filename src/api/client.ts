@@ -2,10 +2,12 @@ import axios, { AxiosError } from 'axios';
 import { Platform } from 'react-native';
 
 const resolveApiBaseUrl = (): string => {
-  let url = process.env.EXPO_PUBLIC_API_URL;
-  if (!url || url.includes(':8001')) {
-    url = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://127.0.0.1:8000';
-  } else if (Platform.OS === 'android' && (url.includes('localhost') || url.includes('127.0.0.1'))) {
+  let url = process.env.EXPO_PUBLIC_API_URL || 'https://app.may22sim.com';
+  url = url.trim().replace(/\/+$/, '');
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = `https://${url}`;
+  }
+  if (Platform.OS === 'android' && (url.includes('localhost') || url.includes('127.0.0.1'))) {
     url = url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
   }
   return url;

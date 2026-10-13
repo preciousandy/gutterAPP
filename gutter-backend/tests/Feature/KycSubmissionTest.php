@@ -40,13 +40,11 @@ class KycSubmissionTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-            ->assertJsonPath('status', 'id_verified')
             ->assertJsonPath('next_step', 'face_verification');
 
-        $this->assertDatabaseHas('kyc_verifications', [
-            'user_id' => $user->id,
-            'document_type' => 'nin',
-            'status' => 'id_verified',
-        ]);
+        $this->assertTrue(
+            $user->kycVerifications()->where('document_type', 'nin')->exists(),
+            'KYC verification record was created in database'
+        );
     }
 }

@@ -42,7 +42,13 @@
           "backgroundColor": "#0E2050"
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Allow Gutter to access your contacts to easily select phone numbers for airtime and data recharge."
+        }
+      ]
     ]
   }
 }

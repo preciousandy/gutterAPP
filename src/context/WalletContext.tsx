@@ -153,6 +153,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           ...prev.wallet,
           balance: newBalance,
         },
+        balances: (prev.balances || []).map((b) =>
+          b.asset === 'NGN' ? { ...b, amount: newBalance } : b
+        ),
       };
     });
   }, []);

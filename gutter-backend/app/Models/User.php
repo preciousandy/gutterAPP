@@ -133,6 +133,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the latest KYC verification for the user.
+     */
+    public function latestKycVerification()
+    {
+        return $this->hasOne(KycVerification::class)->latestOfMany();
+    }
+
+    /**
      * Get the crypto wallets for the user.
      */
     public function cryptoWallets()

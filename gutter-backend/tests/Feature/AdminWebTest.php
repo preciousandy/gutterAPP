@@ -115,4 +115,109 @@ class AdminWebTest extends TestCase
         $response->assertSee('2 New');
         $response->assertSee('2 Alerts');
     }
+
+    public function test_admin_can_view_kyc_dashboard_with_prembly_and_tabs(): void
+    {
+        $admin = AdminUser::firstOrCreate(
+            ['email' => 'admin@gutter.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('Admin@123456'),
+                'role' => 'super_admin',
+                'status' => 'active',
+            ]
+        );
+
+        $user = \App\Models\User::factory()->create([
+            'kyc_status' => 'pending',
+            'tier' => 1,
+        ]);
+
+        $user->kycVerifications()->create([
+            'document_type' => 'nin',
+            'document_number' => '12345678901',
+            'status' => 'pending',
+            'provider' => 'prembly',
+            'id_data' => ['document_image' => 'https://example.com/id.jpg'],
+        ]);
+
+        $response = $this->actingAs($admin, 'admin')->get('/admin/kyc?tab=pending');
+        $response->assertStatus(200);
+        $response->assertSee('Prembly Live');
+        $response->assertSee('Pending Review');
+        $response->assertSee($user->first_name);
+        $response->assertSee('Approve Tier 2');
+    }
+
+    public function test_admin_can_manually_approve_user_kyc_upgrading_to_tier_2(): void
+    {
+        $admin = AdminUser::firstOrCreate(
+            ['email' => 'admin@gutter.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('Admin@123456'),
+                'role' => 'super_admin',
+                'status' => 'active',
+            ]
+        );
+
+        $user = \App\Models\User::factory()->create([
+            'kyc_status' => 'pending',
+            'tier' => 1,
+        ]);
+
+        $user->kycVerifications()->create([
+            'document_type' => 'bvn',
+            'document_number' => '22222222222',
+            'status' => 'pending',
+            'provider' => 'prembly',
+        ]);
+
+        $response = $this->actingAs($admin, 'admin')->post("/admin/kyc/{$user->id}/approve");
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $user->refresh();
+        $this->assertEquals('verified', $user->kyc_status);
+        $this->assertEquals(2, $user->tier);
+        $this->assertEquals('verified', $user->latestKycVerification->status);
+    }
+
+    public function test_admin_can_manually_reject_user_kyc_with_reason(): void
+    {
+        $admin = AdminUser::firstOrCreate(
+            ['email' => 'admin@gutter.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('Admin@123456'),
+                'role' => 'super_admin',
+                'status' => 'active',
+            ]
+        );
+
+        $user = \App\Models\User::factory()->create([
+            'kyc_status' => 'pending',
+            'tier' => 1,
+        ]);
+
+        $user->kycVerifications()->create([
+            'document_type' => 'nin',
+            'document_number' => '12345678901',
+            'status' => 'pending',
+            'provider' => 'prembly',
+        ]);
+
+        $response = $this->actingAs($admin, 'admin')->post("/admin/kyc/{$user->id}/reject", [
+            'reason' => 'Photo of ID is blurry. Please re-take in good lighting.',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $user->refresh();
+        $this->assertEquals('rejected', $user->kyc_status);
+        $this->assertEquals('rejected', $user->latestKycVerification->status);
+        $this->assertStringContainsString('blurry', $user->latestKycVerification->rejection_reason);
+    }
 }

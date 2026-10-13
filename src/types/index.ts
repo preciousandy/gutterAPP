@@ -84,6 +84,10 @@ export interface AccountLookup {
   account_number: string;
   account_name: string;
   bank_code: string;
+  bank_name?: string;
+  is_gutter_user?: boolean;
+  recipient_id?: number;
+  fee?: number;
 }
 
 export interface GutterUserLookup {

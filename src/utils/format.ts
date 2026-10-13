@@ -11,9 +11,6 @@ export function formatNairaCompact(amount: number | null | undefined): string {
   if (Math.abs(amount) >= 1_000_000) {
     return `₦${(amount / 1_000_000).toLocaleString('en-NG', { maximumFractionDigits: 2 })}M`;
   }
-  if (Math.abs(amount) >= 1_000) {
-    return `₦${(amount / 1_000).toLocaleString('en-NG', { maximumFractionDigits: 0 })}k`;
-  }
   return formatNaira(amount);
 }
 

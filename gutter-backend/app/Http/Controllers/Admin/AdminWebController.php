@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminUser;
 use App\Models\AppControl;
 use App\Models\Complaint;
+use App\Models\KycVerification;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\BigisubService;
@@ -656,12 +657,95 @@ class AdminWebController extends Controller
         $admin = $this->getActiveAdmin($request);
         $openComplaints = Complaint::where('status', 'open')->count();
 
-        $pendingUsers = User::where('kyc_status', 'pending')
-            ->orWhere('tier', 1)
-            ->orderByDesc('id')
-            ->paginate(20);
+        $activeTab = $request->query('tab', 'pending');
 
-        return view('admin.kyc', compact('admin', 'pendingUsers', 'openComplaints'));
+        $query = User::with(['latestKycVerification'])->orderByDesc('id');
+
+        switch ($activeTab) {
+            case 'verified':
+                $query->where('kyc_status', 'verified');
+                break;
+            case 'rejected':
+                $query->where('kyc_status', 'rejected');
+                break;
+            case 'all':
+                // Shows any user that submitted KYC or is in any KYC state
+                $query->where(function ($q) {
+                    $q->whereIn('kyc_status', ['pending', 'id_verified', 'verified', 'rejected'])
+                      ->orWhereHas('kycVerifications');
+                });
+                break;
+            case 'pending':
+            default:
+                $query->where(function ($q) {
+                    $q->whereIn('kyc_status', ['pending', 'id_verified'])
+                      ->orWhere(function ($sub) {
+                          $sub->where('kyc_status', 'unverified')->whereHas('kycVerifications');
+                      });
+                });
+                break;
+        }
+
+        $pendingUsers = $query->paginate(20)->withQueryString();
+
+        // Status counts for tabs and KPI counters
+        $pendingCount = User::where(function ($q) {
+            $q->whereIn('kyc_status', ['pending', 'id_verified'])
+              ->orWhere(function ($sub) {
+                  $sub->where('kyc_status', 'unverified')->whereHas('kycVerifications');
+              });
+        })->count();
+
+        $verifiedCount = User::where('kyc_status', 'verified')->count();
+        $rejectedCount = User::where('kyc_status', 'rejected')->count();
+        $totalSubmissions = KycVerification::count();
+
+        $premblyConfigured = !empty(config('services.prembly.api_key', env('PREMBLY_API_KEY')));
+
+        return view('admin.kyc', compact(
+            'admin',
+            'pendingUsers',
+            'openComplaints',
+            'activeTab',
+            'pendingCount',
+            'verifiedCount',
+            'rejectedCount',
+            'totalSubmissions',
+            'premblyConfigured'
+        ));
+    }
+
+    /**
+     * Admin Manual Approval of a User KYC Submission
+     */
+    public function approveKyc(Request $request, int $id): RedirectResponse
+    {
+        $admin = $this->getActiveAdmin($request);
+        if (!$admin->canManageKyc() && !$admin->isSuperAdmin()) {
+            return back()->with('error', 'Unauthorized action for your role.');
+        }
+
+        $user = User::findOrFail($id);
+        $result = app(\App\Services\Kyc\KycService::class)->manualApprove($user, $admin->name);
+
+        return back()->with('success', $result['message']);
+    }
+
+    /**
+     * Admin Manual Rejection of a User KYC Submission
+     */
+    public function rejectKyc(Request $request, int $id): RedirectResponse
+    {
+        $admin = $this->getActiveAdmin($request);
+        if (!$admin->canManageKyc() && !$admin->isSuperAdmin()) {
+            return back()->with('error', 'Unauthorized action for your role.');
+        }
+
+        $user = User::findOrFail($id);
+        $reason = $request->input('reason', $request->input('rejection_reason'));
+        $result = app(\App\Services\Kyc\KycService::class)->manualReject($user, $reason, $admin->name);
+
+        return back()->with('success', $result['message']);
     }
 
     /**

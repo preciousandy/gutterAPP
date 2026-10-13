@@ -55,13 +55,17 @@ class KycController extends Controller
             ], 422);
         }
 
+        $verStatus = $result['status'] ?? ($result['verification']->status ?? 'id_verified');
+        $nextStep = $result['next_step'] ?? ($verStatus === 'pending' ? 'face_verification' : 'face_verification');
+
         return response()->json([
             'message' => $result['message'],
-            'status' => 'id_verified',
-            'next_step' => 'face_verification',
+            'status' => $verStatus,
+            'next_step' => $nextStep,
             'data' => [
                 'document_type' => $validated['document_type'],
                 'provider' => $this->kycService->getProviderName(),
+                'status' => $verStatus,
             ],
         ]);
     }
@@ -84,7 +88,7 @@ class KycController extends Controller
         }
 
         // Optional selfie data or photo payload
-        $selfieData = $request->input('selfie') ?: $request->input('image');
+        $selfieData = $request->input('selfie') ?: $request->input('image') ?: $request->input('selfie_image');
 
         $result = $this->kycService->processFaceVerification($user, $selfieData);
 
@@ -95,9 +99,11 @@ class KycController extends Controller
             ], 422);
         }
 
+        $actualStatus = $result['user']->kyc_status ?? 'pending';
+
         return response()->json([
             'message' => $result['message'],
-            'status' => 'verified',
+            'status' => $actualStatus,
             'user' => new UserResource($result['user']),
         ]);
     }

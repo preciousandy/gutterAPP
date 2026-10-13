@@ -7,11 +7,11 @@ export async function listBanks(): Promise<Bank[]> {
 }
 
 export async function verifyAccount(
-  bank_code: string,
+  bank_code: string | null | undefined,
   account_number: string
 ): Promise<AccountLookup> {
   const { data } = await api.post<{ data: AccountLookup }>('/transfers/verify-account', {
-    bank_code,
+    bank_code: bank_code || '',
     account_number,
   });
   return data.data;

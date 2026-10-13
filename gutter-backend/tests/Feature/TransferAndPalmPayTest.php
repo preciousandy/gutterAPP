@@ -50,6 +50,47 @@ class TransferAndPalmPayTest extends TestCase
         $this->assertNotEmpty($response->json('data.account_name'));
     }
 
+    public function test_user_can_verify_external_opay_account_matching_own_phone_number(): void
+    {
+        $user = User::factory()->create([
+            'phone' => '+2348077406889',
+            'account_number' => '6681835369',
+            'bank_name' => 'PalmPay',
+            'kyc_status' => 'verified',
+            'status' => 'active',
+        ]);
+
+        // Verifying an external OPay account whose account number matches the user's phone suffix
+        $response = $this->actingAs($user)->postJson('/api/v1/transfers/verify-account', [
+            'bank_code' => '999992', // OPay
+            'account_number' => '8077406889',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.account_number', '8077406889');
+        $this->assertNotEmpty($response->json('data.account_name'));
+    }
+
+    public function test_user_cannot_transfer_to_own_gutter_deposit_account(): void
+    {
+        $user = User::factory()->create([
+            'phone' => '+2348077406889',
+            'account_number' => '6681835369',
+            'bank_name' => 'PalmPay',
+            'kyc_status' => 'verified',
+            'status' => 'active',
+        ]);
+
+        // Entering user's exact Gutter deposit account number at PalmPay
+        $response = $this->actingAs($user)->postJson('/api/v1/transfers/verify-account', [
+            'bank_code' => '999991', // PalmPay
+            'account_number' => '6681835369',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('message', 'You cannot transfer money to your own Gutter deposit account.');
+    }
+
     public function test_resolve_gutter_user(): void
     {
         $sender = User::factory()->create([
@@ -293,5 +334,94 @@ class TransferAndPalmPayTest extends TestCase
 
         $response->assertStatus(429)
             ->assertJsonPath('message', 'A transfer is already being processed on your account. Please wait a moment.');
+    }
+
+    public function test_banks_list_prepends_gutter_instant_and_free(): void
+    {
+        $user = User::factory()->create([
+            'kyc_status' => 'verified',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($user)->getJson('/api/v1/banks');
+
+        $response->assertStatus(200);
+        $banks = $response->json('data');
+        $this->assertNotEmpty($banks);
+        $this->assertEquals('999991', $banks[0]['code']);
+        $this->assertEquals('Gutter (Instant & Free)', $banks[0]['name']);
+    }
+
+    public function test_verify_account_auto_resolves_gutter_user_even_without_bank_code(): void
+    {
+        $sender = User::factory()->create([
+            'kyc_status' => 'verified',
+            'status' => 'active',
+        ]);
+
+        $recipient = User::factory()->create([
+            'name' => 'Michael Ade',
+            'account_number' => '8888123456',
+            'phone' => '08088123456',
+        ]);
+
+        // Scenario 1: No bank code passed, just recipient's 10-digit account number
+        $response1 = $this->actingAs($sender)->postJson('/api/v1/transfers/verify-account', [
+            'account_number' => '8888123456',
+        ]);
+
+        $response1->assertStatus(200)
+            ->assertJsonPath('data.account_name', 'MICHAEL ADE')
+            ->assertJsonPath('data.is_gutter_user', true)
+            ->assertJsonPath('data.bank_code', '999991')
+            ->assertJsonPath('data.recipient_id', $recipient->id)
+            ->assertJsonPath('data.fee', 0);
+
+        // Scenario 2: Selecting Gutter bank code 999991 explicitly
+        $response2 = $this->actingAs($sender)->postJson('/api/v1/transfers/verify-account', [
+            'bank_code' => '999991',
+            'account_number' => '8888123456',
+        ]);
+
+        $response2->assertStatus(200)
+            ->assertJsonPath('data.account_name', 'MICHAEL ADE')
+            ->assertJsonPath('data.is_gutter_user', true);
+    }
+
+    public function test_bank_transfer_auto_routes_to_zero_fee_when_recipient_is_gutter_user(): void
+    {
+        $sender = User::factory()->create([
+            'kyc_status' => 'verified',
+            'status' => 'active',
+            'wallet_balance' => 50000,
+            'pin' => Hash::make('1122'),
+            'has_pin' => true,
+            'tier' => 2,
+        ]);
+
+        $recipient = User::factory()->create([
+            'name' => 'Chioma Obi',
+            'account_number' => '7777123456',
+            'wallet_balance' => 5000,
+        ]);
+
+        // Sender initiates transfer via 'type' => 'bank' and bank_code => '999991' or PalmPay '100033'
+        $response = $this->actingAs($sender)->postJson('/api/v1/transfers', [
+            'type' => 'bank',
+            'bank_code' => '999991',
+            'account_number' => '7777123456',
+            'amount' => 12000,
+            'pin' => '1122',
+            'description' => 'OPay style auto routing test',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.amount', 12000)
+            ->assertJsonPath('data.fee', 0)
+            ->assertJsonPath('data.status', 'successful');
+
+        // Sender was charged ₦12000 with ₦0 fee (not ₦10 external fee)
+        $this->assertEquals(38000, (float) $sender->fresh()->wallet_balance);
+        $this->assertEquals(17000, (float) $recipient->fresh()->wallet_balance);
     }
 }

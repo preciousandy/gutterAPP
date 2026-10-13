@@ -105,12 +105,7 @@ export function SelectField<T extends string | number>({
             </View>
 
             <View className="flex-row items-center justify-between px-6 pt-3 pb-2">
-              <View>
-                <Text className="font-sans-extrabold text-lg text-ink">{label}</Text>
-                <Text className="font-sans text-[12px] text-ink-muted">
-                  {options.length} options available
-                </Text>
-              </View>
+              <Text className="font-sans-extrabold text-lg text-ink">{label}</Text>
               <Pressable
                 onPress={handleClose}
                 hitSlop={12}

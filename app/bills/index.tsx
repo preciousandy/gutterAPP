@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -51,6 +52,8 @@ import { useAuth, useWallet } from '@/context';
 import { setPendingAction } from '@/lib/pendingAction';
 import { colors } from '@/theme';
 import { formatNaira } from '@/utils/format';
+import { NETWORK_LOGOS, CABLE_LOGOS } from '@/constants/networkAssets';
+import { pickContactPhoneNumber } from '@/utils/contacts';
 
 // ----------------------------------------------------
 // Category Definitions
@@ -1054,6 +1057,18 @@ export default function PayBillsScreen() {
     setSelectedPlan(null);
     setError(null);
     setDismissSuggestions(true);
+  };
+
+  const handleSelectContact = async () => {
+    await pickContactPhoneNumber((selected) => {
+      setPhone(selected.phone);
+      setDismissSuggestions(true);
+      setError(null);
+      const detected = detectNigerianNetwork(selected.phone);
+      if (detected) {
+        setNetwork(detected);
+      }
+    });
   };
 
   const currentNetworkPlans =
@@ -2112,10 +2127,18 @@ export default function PayBillsScreen() {
                           <View
                             style={[
                               styles.cableIconCircle,
-                              { backgroundColor: isSelected ? colors.navy : provider.color },
+                              { backgroundColor: isSelected ? `${colors.navy}12` : '#FFFFFF' },
                             ]}
                           >
-                            <Ionicons name="tv" size={16} color="#FFFFFF" />
+                            {CABLE_LOGOS[provider.code] ? (
+                              <Image
+                                source={CABLE_LOGOS[provider.code]}
+                                style={styles.cableLogoImage}
+                                resizeMode="contain"
+                              />
+                            ) : (
+                              <Ionicons name="tv" size={16} color={isSelected ? colors.navy : provider.color} />
+                            )}
                           </View>
                           <Text
                             style={[
@@ -2478,10 +2501,26 @@ export default function PayBillsScreen() {
                     <View style={styles.headerRightGroup}>
                       {detectedNetwork && !isNetworkMismatch ? (
                         <View style={styles.matchBadge}>
-                          <Ionicons name="checkmark-circle" size={13} color="#059669" />
+                          {NETWORK_LOGOS[detectedNetwork] ? (
+                            <Image
+                              source={NETWORK_LOGOS[detectedNetwork]}
+                              style={styles.detectedNetworkLogo}
+                              resizeMode="contain"
+                            />
+                          ) : (
+                            <Ionicons name="checkmark-circle" size={13} color="#059669" />
+                          )}
                           <Text style={styles.matchBadgeText}>{detectedNetwork}</Text>
                         </View>
                       ) : null}
+                      <Pressable
+                        onPress={handleSelectContact}
+                        style={styles.contactBtn}
+                        hitSlop={8}
+                      >
+                        <Ionicons name="person-circle-outline" size={13} color={colors.navy} />
+                        <Text style={styles.contactBtnText}>Contacts</Text>
+                      </Pressable>
                       <Pressable
                         onPress={async () => {
                           const text = await Clipboard.getStringAsync();
@@ -2516,11 +2555,21 @@ export default function PayBillsScreen() {
                       maxLength={11}
                       style={styles.textInput}
                     />
-                    {phone.length > 0 && (
-                      <Pressable onPress={() => setPhone('')} hitSlop={6}>
-                        <Ionicons name="close-circle" size={17} color={colors.inkMuted} />
+                    <View style={styles.inputEndActions}>
+                      {phone.length > 0 && (
+                        <Pressable onPress={() => setPhone('')} hitSlop={6}>
+                          <Ionicons name="close-circle" size={17} color={colors.inkMuted} />
+                        </Pressable>
+                      )}
+                      <Pressable
+                        onPress={handleSelectContact}
+                        hitSlop={8}
+                        style={styles.contactIconBtn}
+                        accessibilityLabel="Select contact from phone"
+                      >
+                        <Ionicons name="book-outline" size={17} color={colors.navy} />
                       </Pressable>
-                    )}
+                    </View>
                   </View>
 
                   {/* Network Provider Selector Pills */}
@@ -2542,10 +2591,12 @@ export default function PayBillsScreen() {
                               isSelected ? styles.networkBtnActive : styles.networkBtnInactive,
                             ]}
                           >
-                            <View style={[styles.networkBadge, { backgroundColor: n.bg }]}>
-                              <Text style={[styles.networkBadgeText, { color: n.text }]}>
-                                {n.name[0]}
-                              </Text>
+                            <View style={styles.networkLogoContainer}>
+                              <Image
+                                source={NETWORK_LOGOS[n.key]}
+                                style={styles.networkLogoImage}
+                                resizeMode="contain"
+                              />
                             </View>
                             <Text
                               style={[
@@ -2572,7 +2623,16 @@ export default function PayBillsScreen() {
                           style={styles.suggestionRow}
                         >
                           <Text style={styles.suggestionPhone}>{formatPhoneNumber(b.phone)}</Text>
-                          <Text style={styles.suggestionNet}>{b.network}</Text>
+                          <View style={styles.suggestionNetBadge}>
+                            {NETWORK_LOGOS[b.network] && (
+                              <Image
+                                source={NETWORK_LOGOS[b.network]}
+                                style={styles.suggestionNetLogo}
+                                resizeMode="contain"
+                              />
+                            )}
+                            <Text style={styles.suggestionNet}>{b.network}</Text>
+                          </View>
                         </Pressable>
                       ))}
                     </View>
@@ -3201,10 +3261,18 @@ export default function PayBillsScreen() {
                           <View
                             style={[
                               styles.cableIconCircle,
-                              { backgroundColor: isSel ? colors.navy : provider.color },
+                              { backgroundColor: isSel ? `${colors.navy}12` : '#FFFFFF' },
                             ]}
                           >
-                            <Ionicons name="tv" size={16} color="#FFFFFF" />
+                            {CABLE_LOGOS[provider.code] ? (
+                              <Image
+                                source={CABLE_LOGOS[provider.code]}
+                                style={styles.cableLogoImage}
+                                resizeMode="contain"
+                              />
+                            ) : (
+                              <Ionicons name="tv" size={16} color={isSel ? colors.navy : provider.color} />
+                            )}
                           </View>
                           <Text
                             style={[
@@ -3581,10 +3649,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  contactBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3.5,
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
+    borderRadius: 8,
+  },
+  contactBtnText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: colors.navy,
+  },
   pasteText: {
     fontSize: 12,
     fontWeight: '700',
     color: colors.navy,
+  },
+  inputEndActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  contactIconBtn: {
+    padding: 3,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 6,
   },
 
   // Input Fields
@@ -4000,15 +4092,51 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
   },
   networkBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
   networkBadgeText: {
     fontSize: 11,
     fontWeight: '800',
+  },
+  networkLogoContainer: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: 'rgba(0,0,0,0.08)',
+  },
+  networkLogoImage: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+  },
+  detectedNetworkLogo: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+  },
+  suggestionNetBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  suggestionNetLogo: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+  },
+  cableLogoImage: {
+    width: 26,
+    height: 26,
+    borderRadius: 6,
   },
   networkBtnText: {
     fontSize: 12,

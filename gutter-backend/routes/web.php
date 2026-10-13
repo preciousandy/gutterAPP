@@ -37,6 +37,8 @@ Route::prefix('admin')->group(function () {
 
         // KYC Compliance
         Route::get('/kyc', [AdminWebController::class, 'kyc'])->name('admin.kyc');
+        Route::post('/kyc/{id}/approve', [AdminWebController::class, 'approveKyc'])->name('admin.kyc.approve');
+        Route::post('/kyc/{id}/reject', [AdminWebController::class, 'rejectKyc'])->name('admin.kyc.reject');
 
         // Customer Disputes & Complaint Tickets
         Route::get('/complaints', [AdminWebController::class, 'complaints'])->name('admin.complaints');

@@ -13,7 +13,7 @@ import { TransactionRow } from '@/components/TransactionRow';
 import { useAuth, useKycGate, useSettings, useWallet } from '@/context';
 import { getNotifications } from '@/api/notifications';
 import { colors, headerGradient } from '@/theme';
-import { formatCrypto, formatNaira, formatNairaCompact, initials } from '@/utils/format';
+import { formatCrypto, formatNaira, initials } from '@/utils/format';
 
 const ASSET_STYLE: Record<string, { glyph: string; bg: string; fg: string }> = {
   NGN: { glyph: '₦', bg: 'bg-chip', fg: 'text-navy' },
@@ -217,6 +217,7 @@ export default function HomeScreen() {
             <View className="mt-2.5 flex-row gap-3">
               {balances.slice(0, 3).map((b) => {
                 const style = ASSET_STYLE[b.asset] ?? ASSET_STYLE.NGN;
+                const displayAmount = b.asset === 'NGN' ? (wallet?.balance ?? b.amount) : b.amount;
                 return (
                   <View key={b.asset} className="flex-1 gap-2.5 rounded-[18px] border border-line bg-surface p-3.5">
                     <View className={`h-[30px] w-[30px] items-center justify-center rounded-[10px] ${style.bg}`}>
@@ -225,12 +226,16 @@ export default function HomeScreen() {
                     <Text className="font-sans-semibold text-[10px] tracking-wide text-ink-soft">
                       {b.asset}
                     </Text>
-                    <Text className="font-grotesk-bold text-sm text-ink">
+                    <Text
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      className="font-grotesk-bold text-sm text-ink"
+                    >
                       {hideBalances
                         ? '• • •'
                         : b.asset === 'NGN'
-                          ? formatNairaCompact(b.amount)
-                          : formatCrypto(b.amount, 4)}
+                          ? formatNaira(displayAmount)
+                          : formatCrypto(displayAmount, 4)}
                     </Text>
                   </View>
                 );

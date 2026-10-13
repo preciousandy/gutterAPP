@@ -83,7 +83,7 @@ export async function submitKyc(payload: {
 
 export interface KycFaceCheckResponse {
   message: string;
-  status: 'verified';
+  status: 'verified' | 'pending';
   user: User;
 }
 
