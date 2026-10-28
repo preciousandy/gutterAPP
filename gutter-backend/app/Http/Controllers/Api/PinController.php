@@ -154,4 +154,44 @@ class PinController extends Controller
             'user' => new UserResource($user->fresh()),
         ]);
     }
+
+    /**
+     * Verify the user's 4-digit transaction PIN (for quick unlock or transaction authorization).
+     *
+     * Route: POST /api/v1/pin/verify
+     */
+    public function verify(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! $user->has_pin || empty($user->pin)) {
+            return response()->json([
+                'message' => 'No transaction PIN has been set on this account.',
+                'errors' => [
+                    'pin' => ['No transaction PIN has been set on this account.'],
+                ],
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'pin' => ['required', 'string', 'digits:4'],
+        ], [
+            'pin.required' => 'Please enter your 4-digit PIN.',
+            'pin.digits' => 'PIN must be exactly 4 digits.',
+        ]);
+
+        if (! Hash::check($validated['pin'], $user->pin)) {
+            return response()->json([
+                'message' => 'Incorrect PIN. Please try again.',
+                'errors' => [
+                    'pin' => ['Incorrect PIN. Please try again.'],
+                ],
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'PIN verified successfully.',
+            'verified' => true,
+        ]);
+    }
 }

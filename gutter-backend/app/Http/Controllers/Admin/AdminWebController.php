@@ -7,6 +7,8 @@ use App\Models\AdminUser;
 use App\Models\AppControl;
 use App\Models\Complaint;
 use App\Models\KycVerification;
+use App\Models\SavingsPlan;
+use App\Models\SavingsTargetCategory;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\BigisubService;
@@ -123,7 +125,7 @@ class AdminWebController extends Controller
             ->sum('amount');
 
         $billsVolume = (float) Transaction::where('status', 'successful')
-            ->whereIn('type', ['airtime', 'data', 'bills'])
+            ->whereIn('type', ['airtime', 'data', 'bills', 'electricity', 'cable', 'betting'])
             ->sum('amount');
 
         $transfersVolume = (float) Transaction::where('status', 'successful')
@@ -195,10 +197,16 @@ class AdminWebController extends Controller
         // Fee & Control Settings across all 8 core services
         $feeSettings = FeeService::getAllSettings();
 
+        // Savings & Wealth Products
+        $savingsPlans = SavingsPlan::orderBy('order_index')->get();
+        $targetCategories = SavingsTargetCategory::orderBy('order_index')->orderBy('id')->get();
+
         return view('admin.app-controls', compact(
             'admin',
             'controls',
             'feeSettings',
+            'savingsPlans',
+            'targetCategories',
             'openComplaints',
             'vasProvider',
             'bigisubApiKey',
@@ -206,6 +214,196 @@ class AdminWebController extends Controller
             'allowFallback',
             'bigisubStatus'
         ));
+    }
+
+    /**
+     * Update a Savings Plan (percentage, minimum deposit, name, description, lock period)
+     */
+    public function updateSavingsPlan(Request $request, int $id): JsonResponse|RedirectResponse
+    {
+        $admin = $this->getActiveAdmin($request);
+        if (!$admin->canManageAppControls()) {
+            return response()->json(['message' => 'Unauthorized action for your role.'], 403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'tagline' => 'nullable|string|max:255',
+            'annual_rate' => 'required|numeric|min:0|max:100',
+            'early_break_fee_percentage' => 'nullable|numeric|min:0|max:100',
+            'min_deposit' => 'required|numeric|min:0',
+            'lock_period' => 'nullable|string|max:50',
+            'is_enabled' => 'nullable|boolean',
+            'allow_withdrawals' => 'nullable|boolean',
+            'description' => 'nullable|string',
+        ]);
+
+        $plan = SavingsPlan::findOrFail($id);
+        $plan->update([
+            'name' => $validated['name'],
+            'tagline' => $validated['tagline'] ?? $plan->tagline,
+            'annual_rate' => (float) $validated['annual_rate'],
+            'early_break_fee_percentage' => $request->has('early_break_fee_percentage') ? (float) $validated['early_break_fee_percentage'] : ($plan->early_break_fee_percentage ?? 2.50),
+            'min_deposit' => (float) $validated['min_deposit'],
+            'lock_period' => $validated['lock_period'] ?? $plan->lock_period,
+            'is_enabled' => $request->has('is_enabled') ? (bool) $request->input('is_enabled') : $plan->is_enabled,
+            'allow_withdrawals' => $request->has('allow_withdrawals') ? (bool) $request->input('allow_withdrawals') : $plan->allow_withdrawals,
+            'description' => $validated['description'] ?? $plan->description,
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "{$plan->name} updated successfully.",
+                'data' => $plan,
+            ]);
+        }
+
+        return back()->with('success', "{$plan->name} updated successfully.");
+    }
+
+    /**
+     * Toggle a Savings Plan enabled/disabled status
+     */
+    public function toggleSavingsPlan(Request $request, int $id): JsonResponse
+    {
+        $admin = $this->getActiveAdmin($request);
+        if (!$admin->canManageAppControls()) {
+            return response()->json(['message' => 'Unauthorized action for your role.'], 403);
+        }
+
+        $plan = SavingsPlan::findOrFail($id);
+        $plan->is_enabled = !$plan->is_enabled;
+        $plan->save();
+
+        return response()->json([
+            'success' => true,
+            'is_enabled' => $plan->is_enabled,
+            'message' => "{$plan->name} is now " . ($plan->is_enabled ? 'ENABLED' : 'DISABLED') . '.',
+        ]);
+    }
+
+    /**
+     * Create a new Target Savings Category
+     */
+    public function storeTargetCategory(Request $request): JsonResponse|RedirectResponse
+    {
+        $admin = $this->getActiveAdmin($request);
+        if (!$admin->canManageAppControls()) {
+            return response()->json(['message' => 'Unauthorized action for your role.'], 403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'icon' => 'nullable|string|max:50',
+            'color' => 'nullable|string|max:30',
+            'description' => 'nullable|string|max:255',
+            'is_enabled' => 'nullable|boolean',
+        ]);
+
+        $maxOrder = SavingsTargetCategory::max('order_index') ?? 0;
+
+        $category = SavingsTargetCategory::create([
+            'name' => $validated['name'],
+            'icon' => !empty($validated['icon']) ? $validated['icon'] : 'flag-outline',
+            'color' => !empty($validated['color']) ? $validated['color'] : '#7C3AED',
+            'description' => $validated['description'] ?? null,
+            'is_enabled' => $request->has('is_enabled') ? (bool) $request->input('is_enabled') : true,
+            'order_index' => $maxOrder + 1,
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Target category '{$category->name}' created successfully.",
+                'data' => $category,
+            ]);
+        }
+
+        return back()->with('success', "Target category '{$category->name}' created successfully.");
+    }
+
+    /**
+     * Update an existing Target Savings Category
+     */
+    public function updateTargetCategory(Request $request, int $id): JsonResponse|RedirectResponse
+    {
+        $admin = $this->getActiveAdmin($request);
+        if (!$admin->canManageAppControls()) {
+            return response()->json(['message' => 'Unauthorized action for your role.'], 403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'icon' => 'nullable|string|max:50',
+            'color' => 'nullable|string|max:30',
+            'description' => 'nullable|string|max:255',
+            'is_enabled' => 'nullable|boolean',
+        ]);
+
+        $category = SavingsTargetCategory::findOrFail($id);
+        $category->update([
+            'name' => $validated['name'],
+            'icon' => !empty($validated['icon']) ? $validated['icon'] : $category->icon,
+            'color' => !empty($validated['color']) ? $validated['color'] : $category->color,
+            'description' => $validated['description'] ?? $category->description,
+            'is_enabled' => $request->has('is_enabled') ? (bool) $request->input('is_enabled') : $category->is_enabled,
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Target category '{$category->name}' updated successfully.",
+                'data' => $category,
+            ]);
+        }
+
+        return back()->with('success', "Target category '{$category->name}' updated successfully.");
+    }
+
+    /**
+     * Toggle a Target Savings Category enabled/disabled
+     */
+    public function toggleTargetCategory(Request $request, int $id): JsonResponse
+    {
+        $admin = $this->getActiveAdmin($request);
+        if (!$admin->canManageAppControls()) {
+            return response()->json(['message' => 'Unauthorized action for your role.'], 403);
+        }
+
+        $category = SavingsTargetCategory::findOrFail($id);
+        $category->is_enabled = !$category->is_enabled;
+        $category->save();
+
+        return response()->json([
+            'success' => true,
+            'is_enabled' => $category->is_enabled,
+            'message' => "Category '{$category->name}' is now " . ($category->is_enabled ? 'ENABLED' : 'DISABLED') . '.',
+        ]);
+    }
+
+    /**
+     * Delete a Target Savings Category
+     */
+    public function destroyTargetCategory(Request $request, int $id): JsonResponse|RedirectResponse
+    {
+        $admin = $this->getActiveAdmin($request);
+        if (!$admin->canManageAppControls()) {
+            return response()->json(['message' => 'Unauthorized action for your role.'], 403);
+        }
+
+        $category = SavingsTargetCategory::findOrFail($id);
+        $name = $category->name;
+        $category->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Target category '{$name}' was deleted successfully.",
+            ]);
+        }
+
+        return back()->with('success', "Target category '{$name}' was deleted successfully.");
     }
 
     /**

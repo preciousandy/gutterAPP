@@ -489,12 +489,26 @@ class BigisubService
         string $meterType,
         float $amount,
         ?string $customerName = null,
-        ?string $pin = null
+        ?string $pin = null,
+        ?string $phone = null
     ): array {
         $company = $this->discoCode($disco);
         $cleanMeter = preg_replace('/\D/', '', $meterNo);
         $normalizedType = strtolower($meterType) === 'postpaid' ? 'postpaid' : 'prepaid';
         $pin = $pin ?: $this->pin;
+
+        // Pick user's phone number from database if not explicitly supplied
+        if (empty($phone)) {
+            $userId = auth()->id() ?? request()?->user()?->id;
+            if ($userId) {
+                $phone = \Illuminate\Support\Facades\DB::table('users')->where('id', $userId)->value('phone');
+            }
+            if (empty($phone)) {
+                $phone = auth()->user()?->phone ?? request()?->user()?->phone;
+            }
+        }
+
+        $cleanPhone = $this->normalizePhone((string) ($phone ?? ''));
 
         // Min payment for electricity is 1000
         if ($amount < 1000) {
@@ -511,7 +525,8 @@ class BigisubService
             'meter_no' => $cleanMeter,
             'meter_type' => $normalizedType,
             'Customer_name' => $customerName ?: 'Customer',
-            'amount' => (string) round($amount),
+            'amount' => (int) round($amount),
+            'phone_number' => $cleanPhone,
             'pin' => (string) $pin,
         ];
 
@@ -521,7 +536,7 @@ class BigisubService
                 'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->timeout(45)->post("{$this->baseUrl}api/v2/bills/electricity/pay/", $payload);
+            ])->timeout(60)->post("{$this->baseUrl}api/v2/bills/electricity/pay/", $payload);
 
             $data = $response->json() ?? [];
             Log::info("Bigisub electricity purchase response: HTTP {$response->status()}", [
@@ -538,8 +553,8 @@ class BigisubService
                     'status' => $status,
                     'reference' => $txData['reference'] ?? ($txData['transaction_id'] ?? ('BIGI_ELEC_' . strtoupper(Str::random(10)))),
                     'transaction_id' => $txData['transaction_id'] ?? null,
-                    'token' => $txData['token'] ?? null,
-                    'units' => $txData['units'] ?? null,
+                    'token' => $txData['token'] ?? ($data['token'] ?? ($txData['pin'] ?? ($txData['token_number'] ?? null))),
+                    'units' => $txData['units'] ?? ($data['units'] ?? ($txData['units_purchased'] ?? null)),
                     'message' => $data['message'] ?? 'Electricity payment successful',
                     'provider' => 'bigisub',
                     'data' => $data,

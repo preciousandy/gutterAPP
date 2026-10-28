@@ -601,6 +601,309 @@
     transform: translateY(0);
     opacity: 1;
   }
+
+  /* Savings & Wealth Products Control Panel */
+  .savings-control-panel {
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 32px;
+  }
+  .savings-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line-soft);
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .savings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 20px;
+  }
+  .savings-card {
+    background-color: #FAFCFF;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+  }
+  .savings-card.disabled-savings-card {
+    background-color: #F8FAFC;
+    opacity: 0.65;
+    border-style: dashed;
+  }
+  .savings-card:hover {
+    border-color: var(--mint);
+    box-shadow: var(--shadow-md);
+  }
+  .savings-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .savings-plan-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--navy-deep);
+  }
+  .savings-plan-tagline {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  .savings-badge-pill {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+  }
+  .savings-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .savings-field-full {
+    margin-bottom: 12px;
+  }
+  .savings-field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .savings-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    background-color: #FFFFFF;
+    transition: border-color 0.15s ease;
+  }
+  .savings-input:focus {
+    outline: none;
+    border-color: var(--mint);
+    box-shadow: 0 0 0 3px rgba(35, 211, 165, 0.15);
+  }
+  .savings-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .savings-input-suffix {
+    position: absolute;
+    right: 12px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    pointer-events: none;
+  }
+  .savings-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid var(--line-soft);
+    margin-top: 8px;
+  }
+  .btn-save-savings {
+    background-color: var(--navy-deep);
+    color: #FFFFFF;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .btn-save-savings:hover {
+    background-color: var(--navy);
+    transform: translateY(-1px);
+  }
+
+  /* Target Savings Categories Styling */
+  .target-cat-divider {
+    margin: 32px 0 24px 0;
+    border: 0;
+    border-top: 1.5px dashed var(--line-soft);
+  }
+  .target-cat-header-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .target-cat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .target-cat-card {
+    background: #FFFFFF;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .target-cat-card:hover {
+    border-color: var(--mint);
+    box-shadow: var(--shadow-sm);
+  }
+  .target-cat-card.disabled-cat {
+    background: #F8FAFC;
+    opacity: 0.6;
+    border-style: dashed;
+  }
+  .target-cat-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .target-cat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+  }
+  .target-cat-name {
+    font-size: 14.5px;
+    font-weight: 800;
+    color: var(--navy-deep);
+  }
+  .target-cat-desc {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+  .target-cat-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-soft);
+  }
+  .btn-add-cat {
+    background: var(--navy-deep);
+    color: #FFFFFF;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .btn-add-cat:hover {
+    background: var(--navy);
+    transform: translateY(-1px);
+  }
+  .target-cat-action-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--ink-soft);
+    transition: all 0.15s ease;
+  }
+  .target-cat-action-btn:hover {
+    border-color: var(--navy);
+    color: var(--navy-deep);
+  }
+  .target-cat-action-btn.btn-del:hover {
+    border-color: #EF4444;
+    color: #EF4444;
+    background: #FEF2F2;
+  }
+  /* Target Category Modal */
+  .tc-modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+  }
+  .tc-modal-dialog {
+    background: #FFFFFF;
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+    overflow: hidden;
+    animation: tcPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes tcPop {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .tc-modal-head {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--line-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .tc-modal-body {
+    padding: 20px 24px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .tc-modal-foot {
+    padding: 16px 24px;
+    border-top: 1px solid var(--line-soft);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    background: #F8FAFC;
+  }
 </style>
 
 <!-- Live Sync Banner -->
@@ -767,7 +1070,288 @@
       @endforeach
     </div>
   </div>
-</form>
+<!-- ============================================== -->
+<!-- Savings & Wealth Products Management           -->
+<!-- ============================================== -->
+<div class="savings-control-panel">
+  <div class="savings-panel-header">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <div style="width: 44px; height: 44px; border-radius: 12px; background-color: #ECFDF5; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+        📈
+      </div>
+      <div>
+        <h2 style="font-size: 18px; font-weight: 800; color: var(--navy-deep); margin: 0;">Savings & Wealth Products Management</h2>
+        <p style="font-size: 12.5px; color: var(--ink-soft); margin: 4px 0 0 0;">
+          Control interest rates (%), minimum deposits, enable/disable plans, and edit display descriptions for G-Vault, Target Savings, SafeBox, and Spend & Save.
+        </p>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span class="telemetry-badge" style="background-color: var(--mint-bg); color: var(--mint-dark); border-color: rgba(35,211,165,0.4);">
+        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background-color:var(--mint);"></span>
+        {{ $savingsPlans->where('is_enabled', true)->count() }} of {{ $savingsPlans->count() }} Plans Active
+      </span>
+    </div>
+  </div>
+
+  <div class="savings-grid">
+    @foreach($savingsPlans as $plan)
+      <div class="savings-card {{ $plan->is_enabled ? '' : 'disabled-savings-card' }}" id="savings-card-{{ $plan->id }}">
+        <div>
+          <!-- Plan Card Header -->
+          <div class="savings-card-top">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 36px; height: 36px; border-radius: 10px; background-color: {{ $plan->theme_bg }}; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                @if($plan->category === 'gvault') 💼 @elseif($plan->category === 'target') 🎯 @elseif($plan->category === 'fixed') 🔒 @else ⚡ @endif
+              </div>
+              <div>
+                <div class="savings-plan-title" id="plan_title_{{ $plan->id }}">{{ $plan->name }}</div>
+                <div class="savings-plan-tagline">{{ $plan->key }}</div>
+              </div>
+            </div>
+
+            <!-- Enable/Disable Live Switch -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; font-weight: 700; color: {{ $plan->is_enabled ? '#059669' : '#94A3B8' }};" id="status_text_{{ $plan->id }}">
+                {{ $plan->is_enabled ? 'ENABLED' : 'DISABLED' }}
+              </span>
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="toggle_savings_{{ $plan->id }}"
+                  {{ $plan->is_enabled ? 'checked' : '' }}
+                  onchange="toggleSavingsPlan({{ $plan->id }})"
+                >
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Form Fields -->
+          <div class="savings-field-row">
+            <div>
+              <label class="savings-field-label" for="plan_name_{{ $plan->id }}">Display Name</label>
+              <input type="text" id="plan_name_{{ $plan->id }}" class="savings-input" value="{{ $plan->name }}">
+            </div>
+            <div>
+              <label class="savings-field-label" for="plan_rate_{{ $plan->id }}">Annual Rate (%)</label>
+              <div class="savings-input-group">
+                <input type="number" step="0.1" id="plan_rate_{{ $plan->id }}" class="savings-input" value="{{ $plan->annual_rate }}">
+                <span class="savings-input-suffix">% p.a.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="savings-field-row">
+            <div>
+              <label class="savings-field-label" for="plan_min_{{ $plan->id }}">Min Deposit (₦)</label>
+              <input type="number" step="100" id="plan_min_{{ $plan->id }}" class="savings-input" value="{{ $plan->min_deposit }}">
+            </div>
+            <div>
+              <label class="savings-field-label" for="plan_break_fee_{{ $plan->id }}">Early Break Fee (%)</label>
+              <div class="savings-input-group">
+                <input type="number" step="0.1" min="0" max="100" id="plan_break_fee_{{ $plan->id }}" class="savings-input" value="{{ $plan->early_break_fee_percentage ?? 2.5 }}">
+                <span class="savings-input-suffix">%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="savings-field-full">
+            <label class="savings-field-label" for="plan_lock_{{ $plan->id }}">Lock Period</label>
+            <input type="text" id="plan_lock_{{ $plan->id }}" class="savings-input" value="{{ $plan->lock_period }}">
+          </div>
+
+          <div class="savings-field-full">
+            <label class="savings-field-label" for="plan_tagline_{{ $plan->id }}">Tagline</label>
+            <input type="text" id="plan_tagline_{{ $plan->id }}" class="savings-input" value="{{ $plan->tagline }}">
+          </div>
+
+          <div class="savings-field-full">
+            <label class="savings-field-label" for="plan_desc_{{ $plan->id }}">Description</label>
+            <textarea id="plan_desc_{{ $plan->id }}" class="savings-input" rows="2" style="resize: vertical;">{{ $plan->description }}</textarea>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="savings-card-footer">
+          <div style="font-size: 11px; color: var(--ink-soft);" id="savings_meta_{{ $plan->id }}">
+            Last updated {{ $plan->updated_at->diffForHumans() }}
+          </div>
+          <button type="button" class="btn-save-savings" id="btn_save_savings_{{ $plan->id }}" onclick="saveSavingsPlan({{ $plan->id }})">
+            <span>💾 Save Plan</span>
+          </button>
+        </div>
+      </div>
+    @endforeach
+  </div>
+
+  <!-- Divider -->
+  <hr class="target-cat-divider">
+
+  <!-- ============================================== -->
+  <!-- Target Savings Categories Management           -->
+  <!-- ============================================== -->
+  <div class="target-cat-header-wrap">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="width: 38px; height: 38px; border-radius: 10px; background-color: #EDE9FE; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+        🎯
+      </div>
+      <div>
+        <h3 style="font-size: 16px; font-weight: 800; color: var(--navy-deep); margin: 0;">Target Savings Milestone Categories</h3>
+        <p style="font-size: 12px; color: var(--ink-soft); margin: 3px 0 0 0;">
+          Categories displayed in the mobile app when users choose Target Savings to set goals (e.g. Rent, Tuition, Business, Vacation).
+        </p>
+      </div>
+    </div>
+
+    <button type="button" class="btn-add-cat" onclick="openCreateTargetCategoryModal()">
+      <span>➕ Create New Category</span>
+    </button>
+  </div>
+
+  <div class="target-cat-grid" id="targetCatGrid">
+    @forelse($targetCategories as $cat)
+      <div class="target-cat-card {{ $cat->is_enabled ? '' : 'disabled-cat' }}" id="target_cat_card_{{ $cat->id }}">
+        <div>
+          <div class="target-cat-top">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="target-cat-icon" style="background-color: {{ $cat->color }}1A; color: {{ $cat->color }};">
+                @if(str_contains($cat->icon, 'home')) 🏠
+                @elseif(str_contains($cat->icon, 'school')) 🎓
+                @elseif(str_contains($cat->icon, 'briefcase')) 💼
+                @elseif(str_contains($cat->icon, 'airplane')) ✈️
+                @elseif(str_contains($cat->icon, 'car')) 🚗
+                @elseif(str_contains($cat->icon, 'phone') || str_contains($cat->icon, 'laptop')) 💻
+                @elseif(str_contains($cat->icon, 'shield')) 🛡️
+                @elseif(str_contains($cat->icon, 'heart')) 💍
+                @else 🎯 @endif
+              </div>
+              <div>
+                <div class="target-cat-name" id="tc_name_{{ $cat->id }}">{{ $cat->name }}</div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                  <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: {{ $cat->color }};"></span>
+                  <span style="font-size: 10.5px; font-weight: 700; color: var(--ink-soft);">{{ $cat->color }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Toggle Switch -->
+            <label class="toggle-switch">
+              <input
+                type="checkbox"
+                id="toggle_tc_{{ $cat->id }}"
+                {{ $cat->is_enabled ? 'checked' : '' }}
+                onchange="toggleTargetCategory({{ $cat->id }})"
+              >
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="target-cat-desc" id="tc_desc_{{ $cat->id }}">
+            {{ $cat->description ?: 'No description provided' }}
+          </div>
+        </div>
+
+        <div class="target-cat-footer">
+          <span style="font-size: 11px; font-weight: 700; color: #059669; background: #ECFDF5; padding: 3px 8px; border-radius: 6px;">
+            {{ $cat->userSavings()->where('status', 'active')->count() }} Active User Goals
+          </span>
+
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <button
+              type="button"
+              class="target-cat-action-btn"
+              onclick='openEditTargetCategoryModal(@json($cat))'
+            >
+              ✏️ Edit
+            </button>
+            <button
+              type="button"
+              class="target-cat-action-btn btn-del"
+              onclick="deleteTargetCategory({{ $cat->id }}, '{{ addslashes($cat->name) }}')"
+            >
+              🗑️
+            </button>
+          </div>
+        </div>
+      </div>
+    @empty
+      <div style="grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--ink-soft); font-size: 13px;">
+        No target categories created yet. Click "Create New Category" to get started!
+      </div>
+    @endforelse
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- Target Category Create/Edit Modal Dialog       -->
+<!-- ============================================== -->
+<div id="targetCatModal" class="tc-modal-backdrop">
+  <div class="tc-modal-dialog">
+    <div class="tc-modal-head">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">🎯</span>
+        <h4 id="tcModalTitle" style="font-size: 16px; font-weight: 800; color: var(--navy-deep); margin: 0;">Add Target Category</h4>
+      </div>
+      <button type="button" onclick="closeTargetCategoryModal()" style="background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--ink-soft);">&times;</button>
+    </div>
+
+    <form id="tcModalForm" onsubmit="saveTargetCategoryForm(event)">
+      <input type="hidden" id="tc_form_id" value="">
+
+      <div class="tc-modal-body">
+        <div class="form-group">
+          <label class="form-label" for="tc_form_name">Category Name <span style="color:#EF4444;">*</span></label>
+          <input type="text" id="tc_form_name" class="savings-input" required placeholder="e.g. Rent & Accommodation" style="font-size: 13.5px;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+          <div>
+            <label class="form-label" for="tc_form_icon">Icon Identifier</label>
+            <select id="tc_form_icon" class="savings-input">
+              <option value="home-outline">🏠 Home / Rent</option>
+              <option value="school-outline">🎓 Education / Tuition</option>
+              <option value="briefcase-outline">💼 Business / Startup</option>
+              <option value="airplane-outline">✈️ Vacation / Travel</option>
+              <option value="car-sport-outline">🚗 Vehicle / Car</option>
+              <option value="phone-portrait-outline">💻 Gadgets / Tech</option>
+              <option value="shield-checkmark-outline">🛡️ Emergency Fund</option>
+              <option value="heart-outline">💍 Wedding / Events</option>
+              <option value="gift-outline">🎁 Special Gift</option>
+              <option value="cash-outline">💵 General Milestone</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label" for="tc_form_color">Theme Color</label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="color" id="tc_form_color_picker" value="#7C3AED" style="width: 38px; height: 38px; border: none; border-radius: 8px; cursor: pointer; padding: 0;" oninput="document.getElementById('tc_form_color').value = this.value">
+              <input type="text" id="tc_form_color" class="savings-input" value="#7C3AED" style="font-family: monospace; text-transform: uppercase;">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="tc_form_description">Short Description / Subtitle</label>
+          <input type="text" id="tc_form_description" class="savings-input" placeholder="e.g. Save towards yearly house rent or apartment deposit">
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 14px;">
+          <input type="checkbox" id="tc_form_enabled" checked style="width: 16px; height: 16px; cursor: pointer;">
+          <label for="tc_form_enabled" style="font-size: 13px; font-weight: 700; color: var(--navy-deep); cursor: pointer;">Enable this category in mobile app</label>
+        </div>
+      </div>
+
+      <div class="tc-modal-foot">
+        <button type="button" onclick="closeTargetCategoryModal()" class="target-cat-action-btn" style="padding: 8px 16px; font-size: 12.5px;">Cancel</button>
+        <button type="submit" id="btn_tc_save" class="btn-save-savings" style="padding: 8px 20px;">
+          <span>✓ Save Category</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- Toast Container -->
 <div id="adminToast" class="admin-toast">
@@ -1362,6 +1946,285 @@
         card.style.display = 'none';
       }
     });
+  }
+
+  // ============================================
+  // Savings & Wealth Products Scripts
+  // ============================================
+  async function saveSavingsPlan(planId) {
+    const saveBtn = document.getElementById('btn_save_savings_' + planId);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    const name = document.getElementById('plan_name_' + planId).value.trim();
+    const rate = parseFloat(document.getElementById('plan_rate_' + planId).value) || 0;
+    const breakFeeElem = document.getElementById('plan_break_fee_' + planId);
+    const breakFee = breakFeeElem ? parseFloat(breakFeeElem.value) || 0 : 2.5;
+    const minDeposit = parseFloat(document.getElementById('plan_min_' + planId).value) || 0;
+    const lockPeriod = document.getElementById('plan_lock_' + planId).value.trim();
+    const tagline = document.getElementById('plan_tagline_' + planId).value.trim();
+    const desc = document.getElementById('plan_desc_' + planId).value.trim();
+    const isEnabled = document.getElementById('toggle_savings_' + planId).checked;
+
+    if (!name) {
+      alert('Plan display name cannot be blank.');
+      return;
+    }
+
+    if (saveBtn) {
+      saveBtn.innerText = 'Saving...';
+      saveBtn.disabled = true;
+    }
+
+    try {
+      const response = await fetch(`/admin/app-controls/savings/${planId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify({
+          name: name,
+          annual_rate: rate,
+          early_break_fee_percentage: breakFee,
+          min_deposit: minDeposit,
+          lock_period: lockPeriod,
+          tagline: tagline,
+          description: desc,
+          is_enabled: isEnabled ? 1 : 0,
+        }),
+      });
+
+      const res = await response.json();
+
+      if (response.ok && res.success) {
+        showAdminToast(res.message || 'Savings plan updated!');
+        const titleElem = document.getElementById('plan_title_' + planId);
+        if (titleElem) titleElem.innerText = name;
+        const metaElem = document.getElementById('savings_meta_' + planId);
+        if (metaElem) metaElem.innerText = 'Last updated just now';
+
+        if (saveBtn) {
+          saveBtn.innerText = '✓ Saved';
+          setTimeout(() => {
+            saveBtn.innerText = '💾 Save Plan';
+            saveBtn.disabled = false;
+          }, 1800);
+        }
+      } else {
+        alert(res.message || 'Failed to update savings plan.');
+        if (saveBtn) {
+          saveBtn.innerText = '💾 Save Plan';
+          saveBtn.disabled = false;
+        }
+      }
+    } catch (e) {
+      alert('Network error while updating savings plan.');
+      if (saveBtn) {
+        saveBtn.innerText = '💾 Save Plan';
+        saveBtn.disabled = false;
+      }
+    }
+  }
+
+  async function toggleSavingsPlan(planId) {
+    const checkbox = document.getElementById('toggle_savings_' + planId);
+    const card = document.getElementById('savings-card-' + planId);
+    const statusText = document.getElementById('status_text_' + planId);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    try {
+      const response = await fetch(`/admin/app-controls/savings/${planId}/toggle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+        },
+      });
+
+      const res = await response.json();
+
+      if (response.ok && res.success) {
+        checkbox.checked = res.is_enabled;
+        if (res.is_enabled) {
+          card.classList.remove('disabled-savings-card');
+          if (statusText) {
+            statusText.innerText = 'ENABLED';
+            statusText.style.color = '#059669';
+          }
+        } else {
+          card.classList.add('disabled-savings-card');
+          if (statusText) {
+            statusText.innerText = 'DISABLED';
+            statusText.style.color = '#94A3B8';
+          }
+        }
+        showAdminToast(res.message);
+      } else {
+        alert(res.message || 'Could not toggle savings plan.');
+        checkbox.checked = !checkbox.checked;
+      }
+    } catch (e) {
+      alert('Network error while toggling savings plan.');
+      checkbox.checked = !checkbox.checked;
+    }
+  }
+
+  // ============================================
+  // Target Savings Categories Scripts
+  // ============================================
+  function openCreateTargetCategoryModal() {
+    document.getElementById('tcModalTitle').innerText = 'Add Target Category';
+    document.getElementById('tc_form_id').value = '';
+    document.getElementById('tc_form_name').value = '';
+    document.getElementById('tc_form_icon').value = 'home-outline';
+    document.getElementById('tc_form_color').value = '#7C3AED';
+    document.getElementById('tc_form_color_picker').value = '#7C3AED';
+    document.getElementById('tc_form_description').value = '';
+    document.getElementById('tc_form_enabled').checked = true;
+    document.getElementById('targetCatModal').style.display = 'flex';
+  }
+
+  function openEditTargetCategoryModal(cat) {
+    document.getElementById('tcModalTitle').innerText = 'Edit Target Category';
+    document.getElementById('tc_form_id').value = cat.id;
+    document.getElementById('tc_form_name').value = cat.name || '';
+    document.getElementById('tc_form_icon').value = cat.icon || 'flag-outline';
+    document.getElementById('tc_form_color').value = cat.color || '#7C3AED';
+    document.getElementById('tc_form_color_picker').value = cat.color || '#7C3AED';
+    document.getElementById('tc_form_description').value = cat.description || '';
+    document.getElementById('tc_form_enabled').checked = Boolean(cat.is_enabled);
+    document.getElementById('targetCatModal').style.display = 'flex';
+  }
+
+  function closeTargetCategoryModal() {
+    document.getElementById('targetCatModal').style.display = 'none';
+  }
+
+  async function saveTargetCategoryForm(event) {
+    event.preventDefault();
+    const saveBtn = document.getElementById('btn_tc_save');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    const id = document.getElementById('tc_form_id').value;
+    const name = document.getElementById('tc_form_name').value.trim();
+    const icon = document.getElementById('tc_form_icon').value;
+    const color = document.getElementById('tc_form_color').value.trim();
+    const desc = document.getElementById('tc_form_description').value.trim();
+    const isEnabled = document.getElementById('tc_form_enabled').checked ? 1 : 0;
+
+    if (!name) {
+      alert('Please enter a category name.');
+      return;
+    }
+
+    saveBtn.innerText = 'Saving...';
+    saveBtn.disabled = true;
+
+    const url = id
+      ? `/admin/app-controls/target-categories/${id}`
+      : `/admin/app-controls/target-categories`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify({
+          name: name,
+          icon: icon,
+          color: color,
+          description: desc,
+          is_enabled: isEnabled,
+        }),
+      });
+
+      const res = await response.json();
+
+      if (response.ok && res.success) {
+        showAdminToast(res.message);
+        closeTargetCategoryModal();
+        setTimeout(() => window.location.reload(), 600);
+      } else {
+        alert(res.message || 'Error saving category.');
+        saveBtn.innerText = '✓ Save Category';
+        saveBtn.disabled = false;
+      }
+    } catch (e) {
+      alert('Network error while saving category.');
+      saveBtn.innerText = '✓ Save Category';
+      saveBtn.disabled = false;
+    }
+  }
+
+  async function toggleTargetCategory(catId) {
+    const checkbox = document.getElementById('toggle_tc_' + catId);
+    const card = document.getElementById('target_cat_card_' + catId);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    try {
+      const response = await fetch(`/admin/app-controls/target-categories/${catId}/toggle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+        },
+      });
+
+      const res = await response.json();
+
+      if (response.ok && res.success) {
+        checkbox.checked = res.is_enabled;
+        if (res.is_enabled) {
+          card.classList.remove('disabled-cat');
+        } else {
+          card.classList.add('disabled-cat');
+        }
+        showAdminToast(res.message);
+      } else {
+        alert(res.message || 'Could not toggle category.');
+        checkbox.checked = !checkbox.checked;
+      }
+    } catch (e) {
+      alert('Network error while toggling category.');
+      checkbox.checked = !checkbox.checked;
+    }
+  }
+
+  async function deleteTargetCategory(catId, name) {
+    if (!confirm(`Are you sure you want to delete the "${name}" target category?`)) {
+      return;
+    }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    try {
+      const response = await fetch(`/admin/app-controls/target-categories/${catId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+        },
+      });
+
+      const res = await response.json();
+
+      if (response.ok && res.success) {
+        showAdminToast(res.message);
+        const card = document.getElementById('target_cat_card_' + catId);
+        if (card) card.remove();
+      } else {
+        alert(res.message || 'Failed to delete category.');
+      }
+    } catch (e) {
+      alert('Network error while deleting category.');
+    }
   }
 
   // Initialize fee calculation previews on page load

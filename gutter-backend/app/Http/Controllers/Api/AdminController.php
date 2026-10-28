@@ -177,7 +177,7 @@ class AdminController extends Controller
 
         // Volume breakdown by category
         $billsVolume = (float) Transaction::where('status', 'successful')
-            ->whereIn('type', ['airtime', 'data', 'bills'])
+            ->whereIn('type', ['airtime', 'data', 'bills', 'electricity', 'cable', 'betting'])
             ->sum('amount');
 
         $transfersVolume = (float) Transaction::where('status', 'successful')

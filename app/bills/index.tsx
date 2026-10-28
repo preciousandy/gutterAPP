@@ -1135,6 +1135,7 @@ export default function PayBillsScreen() {
             meter_type: meterType,
             amount: numAmount,
             customer_name: verifiedMeterInfo?.name,
+            phone: user?.phone || undefined,
             pin,
             save_beneficiary: saveAsBeneficiary,
             beneficiary_nickname: beneficiaryNickname.trim() || undefined,

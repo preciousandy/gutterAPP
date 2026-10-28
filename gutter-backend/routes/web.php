@@ -26,6 +26,16 @@ Route::prefix('admin')->group(function () {
         Route::get('/app-controls/test-bigisub', [AdminWebController::class, 'testBigisub'])->name('admin.app_controls.test_bigisub');
         Route::post('/app-controls/{key}/toggle', [AdminWebController::class, 'toggleControl'])->name('admin.app_controls.toggle');
 
+        // Savings & Wealth Products Controls
+        Route::post('/app-controls/savings/{id}', [AdminWebController::class, 'updateSavingsPlan'])->name('admin.app_controls.savings.update');
+        Route::post('/app-controls/savings/{id}/toggle', [AdminWebController::class, 'toggleSavingsPlan'])->name('admin.app_controls.savings.toggle');
+
+        // Target Savings Categories Controls
+        Route::post('/app-controls/target-categories', [AdminWebController::class, 'storeTargetCategory'])->name('admin.app_controls.target_categories.store');
+        Route::post('/app-controls/target-categories/{id}', [AdminWebController::class, 'updateTargetCategory'])->name('admin.app_controls.target_categories.update');
+        Route::post('/app-controls/target-categories/{id}/toggle', [AdminWebController::class, 'toggleTargetCategory'])->name('admin.app_controls.target_categories.toggle');
+        Route::delete('/app-controls/target-categories/{id}', [AdminWebController::class, 'destroyTargetCategory'])->name('admin.app_controls.target_categories.destroy');
+
         // Transactions Ledger
         Route::get('/transactions', [AdminWebController::class, 'transactions'])->name('admin.transactions');
 

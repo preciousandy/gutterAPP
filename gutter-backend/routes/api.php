@@ -88,6 +88,23 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'account.active'])->group(fun
     Route::post('/pin', [PinController::class, 'store']);
     Route::post('/pin/change', [PinController::class, 'change'])
         ->middleware('throttle:pin-change');
+    Route::post('/pin/verify', [PinController::class, 'verify'])
+        ->middleware('throttle:10,1');
+
+    // Savings & Wealth Products (G-Vault, Target, SafeBox, Spend & Save)
+    Route::prefix('savings')->group(function () {
+        Route::get('/plans', [\App\Http\Controllers\Api\SavingsController::class, 'plans']);
+        Route::get('/target-categories', [\App\Http\Controllers\Api\SavingsController::class, 'targetCategories']);
+        Route::get('/dashboard', [\App\Http\Controllers\Api\SavingsController::class, 'dashboard']);
+        Route::get('/{id}/break-preview', [\App\Http\Controllers\Api\SavingsController::class, 'breakPreview']);
+        Route::post('/break-preview', [\App\Http\Controllers\Api\SavingsController::class, 'breakPreview']);
+        Route::post('/deposit', [\App\Http\Controllers\Api\SavingsController::class, 'deposit'])
+            ->middleware(['throttle:savings-deposit', 'account.not_frozen']);
+        Route::post('/withdraw', [\App\Http\Controllers\Api\SavingsController::class, 'withdraw'])
+            ->middleware(['throttle:savings-withdraw', 'account.not_frozen']);
+        Route::post('/break', [\App\Http\Controllers\Api\SavingsController::class, 'breakSavings'])
+            ->middleware(['throttle:savings-withdraw', 'account.not_frozen']);
+    });
 
     // Email OTP onboarding
     Route::prefix('auth/email')->group(function () {

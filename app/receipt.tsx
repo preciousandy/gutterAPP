@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,7 +13,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
+import * as Sharing from 'expo-sharing';
 import { LinearGradient } from 'expo-linear-gradient';
+import { captureRef } from 'react-native-view-shot';
 import { Button } from '@/components/Button';
 import { GWatermark } from '@/components/GWatermark';
 import { colors, headerGradient } from '@/theme';
@@ -34,6 +36,8 @@ export default function ReceiptScreen() {
   const router = useRouter();
   const { data } = useLocalSearchParams<{ data?: string }>();
 
+  const receiptCardRef = useRef<View>(null);
+  const [sharingReceipt, setSharingReceipt] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [savingBeneficiary, setSavingBeneficiary] = useState(false);
   const [isBeneficiarySaved, setIsBeneficiarySaved] = useState(false);
@@ -317,8 +321,28 @@ export default function ReceiptScreen() {
   }, [transaction?.status]);
 
   const handleShare = async () => {
-    if (!transaction) return;
+    if (!transaction || sharingReceipt) return;
+    setSharingReceipt(true);
     try {
+      if (receiptCardRef.current) {
+        const imageUri = await captureRef(receiptCardRef, {
+          format: 'png',
+          quality: 1.0,
+          result: 'tmpfile',
+        });
+
+        const isAvailable = await Sharing.isAvailableAsync();
+        if (isAvailable) {
+          await Sharing.shareAsync(imageUri, {
+            mimeType: 'image/png',
+            dialogTitle: `Receipt - ${transaction.reference}`,
+            UTI: 'public.png',
+          });
+          return;
+        }
+      }
+
+      // Fallback to text sharing if image capture or file sharing is unavailable
       const shareMessage = [
         '🧾 GUTTER TRANSACTION RECEIPT',
         '--------------------------------',
@@ -346,8 +370,41 @@ export default function ReceiptScreen() {
         message: shareMessage,
         title: `Receipt - ${transaction.reference}`,
       });
-    } catch {
-      // Ignore dismissed share sheets
+    } catch (error) {
+      console.warn('Error sharing receipt as image:', error);
+      try {
+        const shareMessage = [
+          '🧾 GUTTER TRANSACTION RECEIPT',
+          '--------------------------------',
+          `Title: ${transaction.title}`,
+          `Amount: ${amountLabel}`,
+          `Status: ${transaction.status.toUpperCase()}`,
+          electricityToken ? `Token: ${formattedToken || electricityToken}` : null,
+          transaction.units ? `Units: ${transaction.units} kWh` : null,
+          transaction.counterparty
+            ? `${isInflow ? 'Sender' : isElectricity ? 'Meter Number' : isBetting ? 'Account / User ID' : isCable ? 'Smartcard / IUC' : isAirtime ? 'Phone' : 'Recipient'}: ${cleanRecipient || transaction.counterparty}`
+            : null,
+          (isCable ? cableProviderName : isBetting ? bookmakerName : isAirtime ? networkProviderName : transaction.counterparty_bank)
+            ? `${isElectricity ? 'DISCO' : isBetting ? 'Bookmaker' : isCable ? 'Provider' : isAirtime ? 'Network' : 'Bank'}: ${isCable ? cableProviderName : isBetting ? bookmakerName : isAirtime ? networkProviderName : transaction.counterparty_bank}`
+            : null,
+          `Date: ${formatDateTime(transaction.created_at)}`,
+          `Reference: ${transaction.reference}`,
+          cleanDescription ? `Description: ${cleanDescription}` : null,
+          '--------------------------------',
+          'Powered by Gutter',
+        ]
+          .filter(Boolean)
+          .join('\n');
+
+        await Share.share({
+          message: shareMessage,
+          title: `Receipt - ${transaction.reference}`,
+        });
+      } catch {
+        // User dismissed share dialog
+      }
+    } finally {
+      setSharingReceipt(false);
     }
   };
 
@@ -469,21 +526,15 @@ export default function ReceiptScreen() {
             </View>
 
             <Text style={styles.heroTitle}>{statusConfig.label}</Text>
-            <Text style={styles.heroAmount}>{amountLabel}</Text>
-
-            <View style={styles.metaRow}>
-              <Ionicons name="time-outline" size={13} color="rgba(255, 255, 255, 0.7)" />
-              <Text style={styles.metaText}>{formatDateTime(transaction.created_at)}</Text>
-            </View>
           </View>
 
           {/* Authentic Digital Receipt Ticket Card */}
-          <View style={styles.ticketCard}>
-            {/* Ticket Header */}
+          <View ref={receiptCardRef} collapsable={false} style={styles.ticketCard}>
+            {/* Ticket Header & Brand */}
             <View style={styles.ticketHeader}>
               <View style={styles.ticketBrandBadge}>
-                <Ionicons name="shield-checkmark" size={13} color={colors.mintDark} />
-                <Text style={styles.ticketBrandText}>VERIFIED TRANSACTION</Text>
+                <Ionicons name="sparkles" size={13} color="#059669" />
+                <Text style={styles.ticketBrandText}>GUTTER PAY</Text>
               </View>
               <View style={styles.categoryPill}>
                 <Text style={styles.categoryPillText}>
@@ -499,6 +550,22 @@ export default function ReceiptScreen() {
                 </Text>
               </View>
             </View>
+
+            {/* Ticket Amount & Status Hero Block */}
+            <View style={styles.ticketAmountSection}>
+              <View style={[styles.ticketStatusPill, { backgroundColor: statusConfig.pillBg }]}>
+                <Ionicons name={statusConfig.icon} size={12} color={statusConfig.pillText} />
+                <Text style={[styles.ticketStatusText, { color: statusConfig.pillText }]}>
+                  {statusConfig.label}
+                </Text>
+              </View>
+              <Text style={styles.ticketAmountText}>{amountLabel}</Text>
+              <View style={styles.ticketDateRow}>
+                <Ionicons name="time-outline" size={12} color={colors.inkMuted} />
+                <Text style={styles.ticketDateText}>{formatDateTime(transaction.created_at)}</Text>
+              </View>
+            </View>
+
 
             {/* Electricity Prepaid Meter Token Card (if available) */}
             {electricityToken ? (
@@ -696,11 +763,9 @@ export default function ReceiptScreen() {
               ) : null}
             </View>
 
-            {/* Perforated Divider with Circular Notches */}
+            {/* Perforated Divider */}
             <View style={styles.perforatedSection}>
-              <View style={styles.notchLeft} />
               <View style={styles.dashedLine} />
-              <View style={styles.notchRight} />
             </View>
 
             {/* Lower Audit & Security Section */}
@@ -741,21 +806,42 @@ export default function ReceiptScreen() {
                 </View>
               </View>
             </View>
+
+            {/* Official Receipt Footer (Captured in Image) */}
+            <View style={styles.receiptFooter}>
+              <View style={styles.receiptFooterDivider} />
+              <View style={styles.receiptFooterContent}>
+                <Ionicons name="shield-checkmark" size={13} color="#059669" />
+                <Text style={styles.receiptFooterBrand}>GUTTER PAY</Text>
+                <Text style={styles.receiptFooterDot}>•</Text>
+                <Text style={styles.receiptFooterText}>Official Verified Receipt</Text>
+              </View>
+            </View>
           </View>
 
           {/* Action Buttons: Share & PDF */}
           <View style={styles.actionRow}>
-            <Pressable onPress={handleShare} style={styles.actionCardBtn}>
+            <Pressable
+              onPress={handleShare}
+              disabled={sharingReceipt}
+              style={[styles.actionCardBtn, sharingReceipt && { opacity: 0.7 }]}
+            >
               <View style={styles.actionIconCircle}>
-                <Ionicons name="share-social-outline" size={17} color={colors.navy} />
+                {sharingReceipt ? (
+                  <ActivityIndicator size="small" color={colors.navy} />
+                ) : (
+                  <Ionicons name="share-social-outline" size={17} color={colors.navy} />
+                )}
               </View>
-              <Text style={styles.actionCardBtnText}>Share Receipt</Text>
+              <Text style={styles.actionCardBtnText}>
+                {sharingReceipt ? 'Generating…' : 'Share Receipt'}
+              </Text>
             </Pressable>
 
             <Pressable
               onPress={handleDownloadPdf}
               disabled={downloadingPdf}
-              style={styles.actionCardBtn}
+              style={[styles.actionCardBtn, downloadingPdf && { opacity: 0.7 }]}
             >
               <View style={styles.actionIconCircle}>
                 {downloadingPdf ? (
@@ -955,9 +1041,9 @@ const styles = StyleSheet.create({
   },
   ticketBrandText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
+    fontSize: 10.5,
     letterSpacing: 1.2,
-    color: colors.inkMid,
+    color: '#059669',
   },
   categoryPill: {
     backgroundColor: '#F1F5F9',
@@ -969,6 +1055,46 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_700Bold',
     fontSize: 11,
     color: colors.navy,
+  },
+  ticketAmountSection: {
+    alignItems: 'center',
+    paddingTop: 16,
+    paddingBottom: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    backgroundColor: '#FAFCFF',
+  },
+  ticketStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginBottom: 6,
+  },
+  ticketStatusText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
+    letterSpacing: 0.2,
+  },
+  ticketAmountText: {
+    fontFamily: 'SpaceGrotesk_700Bold',
+    fontSize: 32,
+    color: colors.navy,
+    letterSpacing: -0.5,
+  },
+  ticketDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  ticketDateText: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 11,
+    color: colors.inkMuted,
   },
   tokenCard: {
     marginHorizontal: 16,
@@ -1179,39 +1305,20 @@ const styles = StyleSheet.create({
   perforatedSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 24,
-    marginHorizontal: -1,
-  },
-  notchLeft: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#0A1738',
-    marginLeft: -11,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    height: 18,
+    paddingHorizontal: 18,
   },
   dashedLine: {
     flex: 1,
     height: 1,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderTopWidth: 1,
+    borderColor: '#E2E8F0',
     borderStyle: 'dashed',
-    marginHorizontal: 6,
-  },
-  notchRight: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#0A1738',
-    marginRight: -11,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   lowerDetails: {
     paddingHorizontal: 18,
     paddingTop: 8,
-    paddingBottom: 16,
+    paddingBottom: 14,
     backgroundColor: '#FAFAFD',
   },
   referenceContainer: {
@@ -1277,6 +1384,38 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 11,
     letterSpacing: 0.5,
+  },
+  receiptFooter: {
+    paddingHorizontal: 18,
+    paddingBottom: 14,
+    paddingTop: 2,
+    backgroundColor: '#FAFAFD',
+  },
+  receiptFooterDivider: {
+    height: 1,
+    backgroundColor: '#EEF2F6',
+    marginBottom: 10,
+  },
+  receiptFooterContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  receiptFooterBrand: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 10.5,
+    letterSpacing: 1.2,
+    color: colors.navy,
+  },
+  receiptFooterDot: {
+    fontSize: 10,
+    color: colors.inkMuted,
+  },
+  receiptFooterText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 10.5,
+    color: colors.inkMuted,
   },
   actionRow: {
     flexDirection: 'row',

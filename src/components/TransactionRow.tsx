@@ -76,6 +76,36 @@ function getTransactionMeta(
         bg: 'bg-[#FFF7E8]',
         color: colors.btc,
       };
+    case 'data':
+      return {
+        icon: 'wifi-outline',
+        bg: 'bg-chip',
+        color: colors.navy,
+      };
+    case 'electricity':
+      return {
+        icon: 'flash-outline',
+        bg: 'bg-[#FFF7E8]',
+        color: colors.btc,
+      };
+    case 'cable':
+      return {
+        icon: 'tv-outline',
+        bg: 'bg-[#EEF0FF]',
+        color: colors.eth,
+      };
+    case 'betting':
+      return {
+        icon: 'football-outline',
+        bg: 'bg-mint-bg',
+        color: colors.mintDark,
+      };
+    case 'refund':
+      return {
+        icon: 'refresh-outline',
+        bg: 'bg-mint-bg',
+        color: colors.mintDark,
+      };
     case 'card_funding':
     case 'card_payment':
       return {

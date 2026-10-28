@@ -116,6 +116,9 @@
       <option value="all">All Channels</option>
       <option value="airtime" {{ request('type') === 'airtime' ? 'selected' : '' }}>Airtime Recharge</option>
       <option value="data" {{ request('type') === 'data' ? 'selected' : '' }}>Data Bundles</option>
+      <option value="electricity" {{ request('type') === 'electricity' ? 'selected' : '' }}>Electricity Bills</option>
+      <option value="cable" {{ request('type') === 'cable' ? 'selected' : '' }}>Cable TV</option>
+      <option value="betting" {{ request('type') === 'betting' ? 'selected' : '' }}>Betting Funding</option>
       <option value="transfer" {{ request('type') === 'transfer' ? 'selected' : '' }}>Bank Transfers</option>
       <option value="crypto_deposit" {{ request('type') === 'crypto_deposit' ? 'selected' : '' }}>Crypto Deposits</option>
       <option value="crypto_swap" {{ request('type') === 'crypto_swap' ? 'selected' : '' }}>Crypto Swaps</option>

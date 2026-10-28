@@ -125,3 +125,8 @@ export async function changePin(payload: ChangePinPayload): Promise<{ message: s
   return data;
 }
 
+export async function verifyPin(pin: string): Promise<{ message: string; verified: boolean }> {
+  const { data } = await api.post<{ message: string; verified: boolean }>('/pin/verify', { pin });
+  return data;
+}
+

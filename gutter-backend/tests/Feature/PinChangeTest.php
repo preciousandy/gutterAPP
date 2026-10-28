@@ -121,4 +121,51 @@ class PinChangeTest extends TestCase
         $user->refresh();
         $this->assertTrue(Hash::check('2468', $user->pin));
     }
+
+    public function test_user_cannot_verify_pin_if_not_set(): void
+    {
+        $user = User::factory()->create([
+            'pin' => null,
+            'has_pin' => false,
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/api/v1/pin/verify', [
+            'pin' => '1234',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['pin']);
+    }
+
+    public function test_user_fails_verification_with_wrong_pin(): void
+    {
+        $user = User::factory()->create([
+            'pin' => Hash::make('2468'),
+            'has_pin' => true,
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/api/v1/pin/verify', [
+            'pin' => '9999',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['pin'])
+            ->assertJsonPath('message', 'Incorrect PIN. Please try again.');
+    }
+
+    public function test_user_successfully_verifies_correct_pin(): void
+    {
+        $user = User::factory()->create([
+            'pin' => Hash::make('2468'),
+            'has_pin' => true,
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/api/v1/pin/verify', [
+            'pin' => '2468',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('verified', true)
+            ->assertJsonPath('message', 'PIN verified successfully.');
+    }
 }

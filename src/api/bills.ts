@@ -20,6 +20,8 @@ export interface ElectricityPurchasePayload {
   meter_type: 'prepaid' | 'postpaid';
   amount: number;
   customer_name?: string;
+  phone?: string;
+  phone_number?: string;
   pin: string;
   save_beneficiary?: boolean;
   beneficiary_nickname?: string;
@@ -228,7 +230,9 @@ export async function purchaseBill(
     data: Transaction;
     token?: string | null;
     units?: string | null;
-  }>('/bills/purchase', payload);
+  }>('/bills/purchase', payload, {
+    timeout: 75000,
+  });
 
   return {
     ...data.data,

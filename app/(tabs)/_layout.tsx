@@ -45,12 +45,18 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="savings"
+        options={{
+          title: 'Savings',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="pie-chart" size={size - 2} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="crypto"
         options={{
-          title: 'Crypto',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="trending-up" size={size - 2} color={color} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen

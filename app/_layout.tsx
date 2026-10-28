@@ -19,6 +19,7 @@ import {
 import { SpaceGrotesk_600SemiBold, SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
 import { AppProviders, useAuth } from '@/context';
 import { SplashScreenView } from '@/components/SplashScreenView';
+import { SecurityLockOverlay } from '@/components/SecurityLockOverlay';
 import { colors } from '@/theme';
 
 // Keep the splash screen up until fonts load and the session is restored.
@@ -79,6 +80,8 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
           onFinish={() => setShowSplash(false)}
         />
       )}
+
+      <SecurityLockOverlay />
     </View>
   );
 }

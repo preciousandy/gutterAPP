@@ -30,7 +30,7 @@ export function TransactionProcessingModal({
   amountLabel,
   title = 'Processing Transaction',
   onTimeoutAction,
-  timeoutSeconds = 25,
+  timeoutSeconds = 75,
 }: TransactionProcessingModalProps) {
   const [elapsed, setElapsed] = useState(0);
   const [isTimedOut, setIsTimedOut] = useState(false);

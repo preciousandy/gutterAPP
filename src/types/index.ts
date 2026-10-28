@@ -34,6 +34,11 @@ export type TransactionType =
   | 'card_funding'
   | 'card_payment'
   | 'airtime'
+  | 'data'
+  | 'electricity'
+  | 'cable'
+  | 'betting'
+  | 'refund'
   | 'atm_withdrawal';
 
 export type TransactionDirection = 'in' | 'out';

@@ -325,6 +325,7 @@ class BillPaymentTest extends TestCase
         // Assert transaction was recorded
         $this->assertDatabaseHas('transactions', [
             'user_id' => $user->id,
+            'type' => 'electricity',
             'amount' => 1000,
             'direction' => 'out',
             'status' => 'successful',

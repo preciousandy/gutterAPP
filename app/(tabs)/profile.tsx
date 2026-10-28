@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '@/components/Button';
 import { GWatermark } from '@/components/GWatermark';
 import { Toggle } from '@/components/Toggle';
-import { useAuth, useSettings } from '@/context';
+import { useAuth, useSettings, useSecurity } from '@/context';
 import {
   checkBiometricStatus,
   clearBiometricSession,
@@ -20,6 +20,7 @@ import { initials } from '@/utils/format';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
+  const { lock } = useSecurity();
   const {
     hideBalances,
     setHideBalances,
@@ -159,6 +160,13 @@ export default function ProfileScreen() {
               icon="key-outline"
               label="Change transaction PIN"
               onPress={() => router.push('/security/change-pin')}
+              chevron
+            />
+            <Row
+              icon="lock-closed-outline"
+              label="Lock app now"
+              sublabel="Secure session immediately"
+              onPress={() => lock()}
               chevron
               last
             />

@@ -459,6 +459,8 @@ class BillController extends Controller
             'meter_type' => 'required|in:prepaid,postpaid',
             'amount' => 'required|numeric|min:1000',
             'customer_name' => 'nullable|string|max:150',
+            'phone' => 'nullable|string|max:25',
+            'phone_number' => 'nullable|string|max:25',
             'pin' => 'required|digits:4',
         ], [
             'amount.min' => 'Minimum payment for electricity recharge is ₦1,000.',
@@ -469,6 +471,8 @@ class BillController extends Controller
         $meterType = $validated['meter_type'];
         $customerName = $validated['customer_name'] ?? null;
         $amount = (float) $validated['amount'];
+        $dbPhone = DB::table('users')->where('id', $user->id)->value('phone') ?: $user->phone;
+        $phone = $validated['phone_number'] ?? ($validated['phone'] ?? $dbPhone);
 
         // 0.5. Meter Idempotency Guard: Prevent accidental duplicate recharge to same meter within 60s
         $meterLockKey = "idempotency_meter_{$user->id}_{$meterNumber}_{$amount}";
@@ -520,7 +524,7 @@ class BillController extends Controller
             }
 
             // 3. Process via Bigisub API
-            $vtu = $this->bigisub->purchaseElectricity($disco, $meterNumber, $meterType, $amount, $customerName);
+            $vtu = $this->bigisub->purchaseElectricity($disco, $meterNumber, $meterType, $amount, $customerName, null, $phone);
 
             if (!$vtu['success']) {
                 // Release meter lock on failure so user does not have to wait 60s to retry after error
@@ -548,7 +552,7 @@ class BillController extends Controller
                 return Transaction::create([
                     'user_id' => $user->id,
                     'reference' => $vtuRef,
-                    'type' => 'airtime',
+                    'type' => 'electricity',
                     'direction' => 'out',
                     'title' => $title,
                     'subtitle' => $subtitle,
@@ -725,7 +729,7 @@ class BillController extends Controller
                     return Transaction::create([
                         'user_id' => $user->id,
                         'reference' => $localRef,
-                        'type' => 'airtime',
+                        'type' => 'betting',
                         'direction' => 'out',
                         'title' => "{$billerName} Top-up",
                         'subtitle' => 'Account: ' . ($customerName ? "{$customerName} · " : '') . $customerId,
@@ -995,7 +999,7 @@ class BillController extends Controller
                     return Transaction::create([
                         'user_id' => $user->id,
                         'reference' => $localRef,
-                        'type' => 'airtime',
+                        'type' => 'cable',
                         'direction' => 'out',
                         'title' => "{$providerLabel} Subscription",
                         'subtitle' => ($packageName ? "{$packageName}" . ($months > 1 ? " ({$months} mo)" : '') . ' · ' : '') . "IUC: {$cardNo}",
@@ -1080,7 +1084,7 @@ class BillController extends Controller
                     Transaction::create([
                         'user_id' => $user->id,
                         'reference' => 'REF_' . strtoupper(Str::random(10)),
-                        'type' => 'airtime',
+                        'type' => 'refund',
                         'direction' => 'in',
                         'title' => 'Cable Renewal Refund',
                         'subtitle' => "Failed renewal · {$providerLabel} ({$cardNo})",
@@ -1129,7 +1133,7 @@ class BillController extends Controller
                         Transaction::create([
                             'user_id' => $user->id,
                             'reference' => 'REF_' . strtoupper(Str::random(10)),
-                            'type' => 'airtime',
+                            'type' => 'refund',
                             'direction' => 'in',
                             'title' => 'Cable Renewal Refund',
                             'subtitle' => "Failed renewal · {$providerLabel} ({$cardNo})",
@@ -1172,7 +1176,7 @@ class BillController extends Controller
     {
         $user = $request->user();
         $tx = Transaction::where('user_id', $user->id)
-            ->where('type', 'airtime')
+            ->whereIn('type', ['airtime', 'data', 'electricity', 'cable', 'betting'])
             ->findOrFail($id);
 
         if ($tx->status === 'failed') {
