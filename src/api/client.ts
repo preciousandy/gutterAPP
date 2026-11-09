@@ -107,7 +107,20 @@ export function isApiError(e: unknown): e is ApiError {
 }
 
 export function errorMessage(e: unknown): string {
-  if (isApiError(e)) return e.message;
-  if (e instanceof Error) return e.message;
-  return 'Something went wrong.';
+  let msg = 'Something went wrong.';
+  if (isApiError(e)) msg = e.message;
+  else if (e instanceof Error) msg = e.message;
+
+  const lower = msg.toLowerCase();
+  // Intercept raw upstream provider balance/float messages that confuse end-users
+  if (
+    lower.includes('account balance is insufficient') ||
+    lower.includes('merchant balance is insufficient') ||
+    (lower.includes('balance is insufficient') && !lower.includes('naira wallet')) ||
+    (lower.includes('insufficient balance') && !lower.includes('naira wallet'))
+  ) {
+    return 'Bank transfer service is temporarily unavailable. Please try again shortly.';
+  }
+
+  return msg;
 }

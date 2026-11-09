@@ -17,7 +17,13 @@ import { Button } from '@/components/Button';
 import { GWatermark } from '@/components/GWatermark';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SegmentedControl } from '@/components/SegmentedControl';
-import { getCryptoBalances, getMarket, getSendFee, sendCrypto } from '@/api/crypto';
+import {
+  getCryptoBalances,
+  getMarket,
+  getSendFee,
+  sendCrypto,
+  validateCryptoAddress,
+} from '@/api/crypto';
 import { setPendingAction } from '@/lib/pendingAction';
 import { colors } from '@/theme';
 import type { Coin, CryptoHolding, CryptoNetwork, CryptoSendFee } from '@/types';
@@ -160,7 +166,7 @@ export default function SendCryptoScreen() {
     }
   };
 
-  const handleReview = () => {
+  const handleReview = async () => {
     setError(null);
 
     if (!recipient.trim()) {
@@ -172,8 +178,29 @@ export default function SendCryptoScreen() {
       return;
     }
 
+    if (destinationType === 'external_address') {
+      try {
+        const addrCheck = await validateCryptoAddress({
+          symbol,
+          network,
+          address: recipient.trim(),
+        });
+        if (!addrCheck.valid) {
+          setError(addrCheck.message);
+          return;
+        }
+      } catch {
+        // Backend send endpoint will also validate
+      }
+    }
+
     if (!numAmount || numAmount <= 0) {
       setError('Please enter a valid amount to send.');
+      return;
+    }
+
+    if (feeInfo?.min_withdrawal && numAmount < feeInfo.min_withdrawal) {
+      setError(`Minimum withdrawal amount is ${feeInfo.min_withdrawal} ${symbol}.`);
       return;
     }
 
@@ -189,13 +216,15 @@ export default function SendCryptoScreen() {
         ? `${recipient.slice(0, 6)}...${recipient.slice(-4)}`
         : recipient;
 
+    const idempotencyKey = `wd_${symbol}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
     setPendingAction({
       title: 'Confirm Send Crypto',
       amountLabel: `${formatCrypto(numAmount, 6)} ${symbol}`,
       subtitle:
         destinationType === 'gutter_user'
           ? `Sending to Gutter user ${recipient} (Zero fee)`
-          : `Sending via ${network} to ${shortRecipient}`,
+          : `Recipient gets ${formatCrypto(numAmount, 6)} ${symbol} via ${network} (${shortRecipient}) · Total debit: ${formatCrypto(totalCryptoNeeded, 6)} ${symbol}`,
       run: (pin) =>
         sendCrypto({
           symbol,
@@ -205,6 +234,7 @@ export default function SendCryptoScreen() {
           pin,
           network: destinationType === 'external_address' ? network : undefined,
           memo: memo.trim() || undefined,
+          idempotency_key: idempotencyKey,
         }),
     });
 
@@ -416,16 +446,41 @@ export default function SendCryptoScreen() {
             {/* Fee & Breakdown Card */}
             <View className="mt-4 gap-2.5 rounded-[22px] border border-line bg-surface p-4">
               <View className="flex-row items-center justify-between">
-                <Text className="font-sans text-xs text-ink-muted">Transfer Fee</Text>
+                <Text className="font-sans text-xs text-ink-muted">Recipient Receives</Text>
+                <Text className="font-grotesk-bold text-xs text-ink">
+                  {formatCrypto(numAmount, 6)} {symbol}
+                </Text>
+              </View>
+
+              <View className="flex-row items-center justify-between">
+                <Text className="font-sans text-xs text-ink-muted">Quidax Network Fee</Text>
                 {loadingFee ? (
                   <ActivityIndicator size="small" color={colors.inkMuted} />
                 ) : destinationType === 'gutter_user' ? (
                   <Text className="font-sans-bold text-xs text-mint-dark">FREE</Text>
                 ) : (
                   <Text className="font-grotesk-bold text-xs text-ink">
-                    {currentFee} {symbol} ({formatNaira(feeInfo?.fee_naira ?? currentFee * rate)})
+                    {feeInfo?.network_fee ?? currentFee} {symbol}
                   </Text>
                 )}
+              </View>
+
+              {destinationType === 'external_address' && (feeInfo?.platform_fee ?? 0) > 0 && (
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-sans text-xs text-ink-muted">Platform Fee</Text>
+                  <Text className="font-grotesk-bold text-xs text-ink">
+                    {feeInfo?.platform_fee} {symbol} ({formatNaira(feeInfo?.platform_fee_ngn ?? 0)})
+                  </Text>
+                </View>
+              )}
+
+              <View className="flex-row items-center justify-between">
+                <Text className="font-sans text-xs text-ink-muted">Total Fee (NGN Est.)</Text>
+                <Text className="font-sans-semibold text-xs text-ink">
+                  {destinationType === 'gutter_user'
+                    ? '₦0.00'
+                    : formatNaira(feeInfo?.fee_naira ?? currentFee * rate)}
+                </Text>
               </View>
 
               <View className="flex-row items-center justify-between">

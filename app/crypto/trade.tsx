@@ -45,6 +45,7 @@ export default function TradeScreen() {
   const [nairaBalance, setNairaBalance] = useState<number | null>(null);
   const [holding, setHolding] = useState<number | null>(null);
   const [amount, setAmount] = useState('');
+  const [buyInputMode, setBuyInputMode] = useState<'fiat' | 'crypto'>('fiat');
   const [quote, setQuote] = useState<CryptoQuote | null>(null);
   const [now, setNow] = useState(Date.now());
   const [error, setError] = useState<string | null>(null);
@@ -80,12 +81,20 @@ export default function TradeScreen() {
       return;
     }
     const timer = setTimeout(() => {
-      getQuote({ side, symbol, amount: value })
+      getQuote({
+        side,
+        symbol,
+        amount: value,
+        amount_type: side === 'buy' ? buyInputMode : 'crypto',
+      })
         .then(setQuote)
-        .catch(() => setQuote(null));
-    }, 450);
+        .catch((err) => {
+          setQuote(null);
+          setError(errorMessage(err));
+        });
+    }, 400);
     return () => clearTimeout(timer);
-  }, [amount, side, symbol]);
+  }, [amount, side, symbol, buyInputMode]);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -99,18 +108,26 @@ export default function TradeScreen() {
     setError(null);
     const value = Number(amount.replace(/,/g, ''));
     if (!value || value <= 0) {
-      setError(side === 'buy' ? 'Enter how much Naira to spend.' : 'Enter how much to sell.');
+      setError(side === 'buy' ? 'Enter how much to purchase.' : 'Enter how much to convert.');
       return;
     }
+
+    const orderAmount =
+      side === 'buy' && buyInputMode === 'crypto'
+        ? quote?.fiat_amount ?? value * (coin?.price ?? 1550)
+        : value;
+
+    const idempotencyKey = `trade_${side}_${symbol}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
     setPendingAction({
       title: side === 'buy' ? 'Confirm purchase' : 'Confirm conversion',
       amountLabel:
-        side === 'buy' ? formatNaira(value) : `${formatCrypto(value)} ${symbol}`,
+        side === 'buy' ? formatNaira(orderAmount) : `${formatCrypto(value)} ${symbol}`,
       subtitle:
         side === 'buy'
-          ? `buying ${symbol} at ${coin ? formatNaira(coin.price) : 'market rate'}`
-          : `receiving ~${quote ? formatNaira(quote.fiat_amount) : '—'} into Naira Wallet`,
-      run: (pin) => placeOrder({ side, symbol, amount: value, pin }),
+          ? `Buying ~${quote ? formatCrypto(quote.crypto_amount, 6) : ''} ${symbol} at ${coin ? formatNaira(coin.price) : 'market rate'} (Fee: ${quote ? formatNaira(quote.fee) : '—'})`
+          : `Receiving ${quote ? formatNaira(quote.fiat_amount) : '—'} into Naira Wallet (after ${quote ? formatNaira(quote.fee) : '—'} fee)`,
+      run: (pin) => placeOrder({ side, symbol, amount: orderAmount, pin, idempotency_key: idempotencyKey }),
     });
     router.push('/security/confirm-pin');
   };
@@ -154,9 +171,29 @@ export default function TradeScreen() {
 
             <View className="mt-[18px] gap-4 rounded-[22px] border border-line bg-surface p-5">
               <View className="flex-row items-center justify-between">
-                <Text className="font-sans-bold text-[11px] uppercase tracking-[1.5px] text-ink-muted">
-                  {side === 'buy' ? 'You pay' : 'You sell'}
-                </Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="font-sans-bold text-[11px] uppercase tracking-[1.5px] text-ink-muted">
+                    {side === 'buy'
+                      ? buyInputMode === 'fiat'
+                        ? 'You pay (NGN)'
+                        : `Target ${symbol} amount`
+                      : 'You convert'}
+                  </Text>
+                  {side === 'buy' && (
+                    <Pressable
+                      onPress={() => {
+                        setBuyInputMode((m) => (m === 'fiat' ? 'crypto' : 'fiat'));
+                        setAmount('');
+                        setQuote(null);
+                      }}
+                      className="rounded-lg bg-chip px-2 py-0.5"
+                    >
+                      <Text className="font-sans-bold text-[10px] text-navy">
+                        Switch to {buyInputMode === 'fiat' ? symbol : 'NGN'}
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
                 <Text className="font-sans text-[11px] text-ink-soft">
                   {side === 'buy'
                     ? nairaBalance != null
@@ -170,13 +207,22 @@ export default function TradeScreen() {
               <View className="flex-row items-center justify-between gap-3">
                 <TextInput
                   value={amount}
-                  onChangeText={setAmount}
-                  placeholder={side === 'buy' ? '₦100,000' : '0.001234'}
+                  onChangeText={(v) => {
+                    setAmount(v);
+                    setError(null);
+                  }}
+                  placeholder={
+                    side === 'buy'
+                      ? buyInputMode === 'fiat'
+                        ? '₦100,000'
+                        : '10.00'
+                      : '0.001234'
+                  }
                   placeholderTextColor={colors.inkFaint}
                   keyboardType="decimal-pad"
                   className="flex-1 font-grotesk-bold text-[34px] text-ink"
                 />
-                {side === 'buy' ? (
+                {side === 'buy' && buyInputMode === 'fiat' ? (
                   <View className="h-10 flex-row items-center gap-2 rounded-[13px] bg-chip px-3.5">
                     <View className="h-[22px] w-[22px] items-center justify-center rounded-lg bg-navy">
                       <Text className="font-sans-bold text-[11px] text-white">₦</Text>
@@ -250,21 +296,43 @@ export default function TradeScreen() {
 
             <View className="mt-4 gap-3 rounded-[22px] border border-line bg-surface px-5 py-4">
               <InfoRow
-                label="Live rate"
-                value={coin ? `1 ${symbol} = ${formatNaira(coin.price)}` : '—'}
+                label="Quidax live rate"
+                value={
+                  quote
+                    ? `1 ${symbol} = ${formatNaira(quote.rate)}`
+                    : coin
+                      ? `1 ${symbol} = ${formatNaira(coin.price)}`
+                      : '—'
+                }
+              />
+              {side === 'sell' && quote?.gross_fiat_amount != null && (
+                <InfoRow
+                  label="Estimated NGN (before fee)"
+                  value={formatNaira(quote.gross_fiat_amount)}
+                />
+              )}
+              <InfoRow
+                label={`Platform fee (${quote?.fee_percentage ?? 0.5}%)`}
+                value={quote ? formatNaira(quote.fee) : '—'}
               />
               <InfoRow
-                label={side === 'buy' ? 'Fee (0.5%)' : 'Network fee'}
-                value={quote ? formatNaira(quote.fee) : '—'}
+                label={side === 'buy' ? 'Final crypto received' : 'Final NGN credited'}
+                value={
+                  quote
+                    ? side === 'buy'
+                      ? `${formatCrypto(quote.crypto_amount, 8)} ${symbol}`
+                      : formatNaira(quote.fiat_amount)
+                    : '—'
+                }
+                mint
               />
               {side === 'buy' ? (
                 <InfoRow
-                  label="Rate expires in"
+                  label="Quote expires in"
                   value={quote ? countdownTo(quote.expires_at, now) : '—'}
-                  mint
                 />
               ) : (
-                <InfoRow label="Settlement" value="Instant" mint />
+                <InfoRow label="Verification & Settlement" value="Quidax Instant Swap" />
               )}
             </View>
 

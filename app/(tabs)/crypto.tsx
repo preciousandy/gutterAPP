@@ -102,8 +102,17 @@ export default function CryptoScreen() {
                 </Text>
               </Text>
             </View>
-            <View className="h-[34px] justify-center rounded-[11px] border border-white/20 bg-white/10 px-3.5">
-              <Text className="font-sans-bold text-[11px] text-white">24H ▾</Text>
+            <View className="flex-row items-center gap-2">
+              <Pressable
+                onPress={() => router.push('/crypto/history')}
+                className="h-[34px] flex-row items-center gap-1.5 justify-center rounded-[11px] border border-white/20 bg-white/10 px-3"
+              >
+                <Ionicons name="receipt-outline" size={13} color="#fff" />
+                <Text className="font-sans-bold text-[11px] text-white">History</Text>
+              </Pressable>
+              <View className="h-[34px] justify-center rounded-[11px] border border-white/20 bg-white/10 px-3.5">
+                <Text className="font-sans-bold text-[11px] text-white">24H ▾</Text>
+              </View>
             </View>
           </View>
 
@@ -295,10 +304,10 @@ export default function CryptoScreen() {
               className="flex-1"
             />
             <Button
-              title="Convert to Naira"
+              title="Crypto History"
               variant="ghost"
               small
-              onPress={() => router.push({ pathname: '/crypto/trade', params: { side: 'sell' } })}
+              onPress={() => router.push('/crypto/history')}
               className="flex-1"
             />
           </View>

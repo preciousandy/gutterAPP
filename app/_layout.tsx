@@ -58,6 +58,7 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
           <Stack.Screen name="crypto/trade" />
           <Stack.Screen name="crypto/receive" />
           <Stack.Screen name="crypto/send" />
+          <Stack.Screen name="crypto/history" />
           <Stack.Screen name="card/create" />
           <Stack.Screen name="card/fund" />
           <Stack.Screen name="card/details" />

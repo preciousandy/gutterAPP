@@ -137,22 +137,44 @@ export interface CryptoWalletAddress {
   confirmations: number;
   min_deposit: number;
   qr_code_url: string;
+  warning?: string;
+}
+
+export interface CryptoDepositRecord {
+  id: number;
+  tx_hash: string;
+  symbol: Coin['symbol'];
+  network: CryptoNetwork;
+  amount: number;
+  net_amount?: number;
+  platform_fee?: number;
+  confirmations?: number;
+  status: string;
+  converted_to_naira: boolean;
+  naira_amount?: number | null;
+  rate?: number | null;
+  created_at: string;
 }
 
 export interface CryptoAddressesResponse {
   symbol: Coin['symbol'];
   auto_convert_crypto: boolean;
+  deposit_fee_percentage?: number;
+  deposit_fixed_fee_ngn?: number;
   addresses: CryptoWalletAddress[];
+  recent_deposits?: CryptoDepositRecord[];
 }
 
 export interface CryptoHolding {
   symbol: Coin['symbol'];
   name: string;
   amount: number;
+  locked_amount?: number;
   price: number;
   value_naira: number;
   change_24h: number;
   sparkline: number[];
+  enabled?: boolean;
 }
 
 export interface CryptoBalancesResponse {
@@ -167,6 +189,7 @@ export interface SimulatedDepositResponse {
     auto_converted: boolean;
     naira_credited: number | null;
     crypto_credited: number;
+    net_amount?: number;
     symbol: string;
   };
 }
@@ -176,17 +199,28 @@ export interface CryptoQuote {
   symbol: Coin['symbol'];
   /** NGN amount paid (buy) or received (sell). */
   fiat_amount: number;
+  gross_fiat_amount?: number;
   /** Crypto amount received (buy) or sold (sell). */
   crypto_amount: number;
   rate: number;
   fee: number;
+  fee_percentage?: number;
+  fixed_fee_ngn?: number;
+  min_amount?: number;
+  max_amount?: number;
   expires_at: string;
 }
 
 export interface CryptoSendFee {
   symbol: Coin['symbol'];
   fee: number;
+  network_fee?: number;
+  platform_fee?: number;
+  platform_fee_ngn?: number;
   fee_naira: number;
+  rate?: number;
+  min_withdrawal?: number;
+  max_withdrawal?: number;
   destination_type: 'gutter_user' | 'external_address';
 }
 
@@ -198,6 +232,42 @@ export interface CryptoSendPayload {
   pin: string;
   network?: string;
   memo?: string;
+  idempotency_key?: string;
+}
+
+export interface CryptoTransactionRecord {
+  id: number;
+  transaction_id?: number | null;
+  reference: string;
+  quidax_reference?: string | null;
+  type: 'receive_crypto' | 'send_crypto' | 'convert_to_naira' | 'buy_crypto';
+  transaction_type?: 'receive_crypto' | 'send_crypto' | 'convert_to_naira' | 'buy_crypto';
+  symbol: Coin['symbol'];
+  network?: string | null;
+  destination_type?: string | null;
+  wallet_address?: string | null;
+  memo?: string | null;
+  tx_hash?: string | null;
+  crypto_amount: number;
+  fiat_amount: number;
+  exchange_rate: number;
+  network_fee: number;
+  network_fee_crypto?: number;
+  platform_fee_crypto: number;
+  platform_fee_ngn: number;
+  total_crypto_deducted: number;
+  net_crypto_amount: number;
+  net_fiat_amount: number;
+  status: 'pending' | 'processing' | 'successful' | 'failed' | 'rejected' | 'refunded' | 'refund_processing';
+  failure_reason?: string | null;
+  is_refunded?: boolean;
+  refunded_amount?: number | null;
+  refunded_currency?: string | null;
+  refund_reference?: string | null;
+  refunded_at?: string | null;
+  fee_config_snapshot?: Record<string, any> | null;
+  created_at: string;
+  completed_at?: string | null;
 }
 
 export interface CryptoSendResponse {

@@ -26,7 +26,8 @@ import {
 } from '@/api/crypto';
 import { useWallet } from '@/context';
 import { colors } from '@/theme';
-import type { Coin, CryptoNetwork, CryptoWalletAddress } from '@/types';
+import type { Coin, CryptoDepositRecord, CryptoNetwork, CryptoWalletAddress } from '@/types';
+import { formatCrypto, formatNaira } from '@/utils/format';
 
 const COIN_CONFIG: Record<
   Coin['symbol'],
@@ -48,11 +49,13 @@ export default function ReceiveCryptoScreen() {
     (params.symbol as Coin['symbol']) || 'USDT'
   );
   const [addresses, setAddresses] = useState<CryptoWalletAddress[]>([]);
+  const [recentDeposits, setRecentDeposits] = useState<CryptoDepositRecord[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState<CryptoNetwork>('TRC20');
   const [autoConvert, setAutoConvert] = useState(false);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [updatingAutoConvert, setUpdatingAutoConvert] = useState(false);
+  const [coinPickerVisible, setCoinPickerVisible] = useState(false);
 
   // Simulation modal state
   const [simModalVisible, setSimModalVisible] = useState(false);
@@ -64,9 +67,9 @@ export default function ReceiveCryptoScreen() {
     try {
       const res = await getCryptoAddresses(symbol);
       setAddresses(res.addresses);
+      setRecentDeposits(res.recent_deposits ?? []);
       setAutoConvert(res.auto_convert_crypto);
       if (res.addresses.length > 0) {
-        // Keep selected if valid, or default to first
         const exists = res.addresses.some((a) => a.network === selectedNetwork);
         if (!exists) {
           setSelectedNetwork(res.addresses[0].network);
@@ -131,13 +134,14 @@ export default function ReceiveCryptoScreen() {
       });
       setSimModalVisible(false);
       void refreshWallet();
+      void loadData();
       Alert.alert(
         res.data.auto_converted ? 'Auto-Converted to Naira!' : 'Crypto Received!',
         res.message,
         [
           {
-            text: 'Go to Wallet',
-            onPress: () => router.replace('/(tabs)'),
+            text: 'View History',
+            onPress: () => router.push('/crypto/history'),
           },
           { text: 'Done', style: 'cancel' },
         ]
@@ -163,8 +167,11 @@ export default function ReceiveCryptoScreen() {
           contentContainerClassName="px-[22px] pb-12 pt-4"
           showsVerticalScrollIndicator={false}
         >
-          {/* Asset Selector */}
-          <View className="mb-4 flex-row items-center justify-between rounded-[20px] border border-line bg-surface p-4 shadow-sm">
+          {/* Asset Selector (Tap to switch cryptocurrency) */}
+          <Pressable
+            onPress={() => setCoinPickerVisible(true)}
+            className="mb-4 flex-row items-center justify-between rounded-[20px] border border-line bg-surface p-4 shadow-sm active:opacity-85"
+          >
             <View className="flex-row items-center gap-3">
               <View
                 className={`h-11 w-11 items-center justify-center rounded-2xl ${currentCoin.chipBg}`}
@@ -177,20 +184,21 @@ export default function ReceiveCryptoScreen() {
                 <Text className="font-sans-bold text-[15px] text-ink">
                   {currentCoin.name}
                 </Text>
-                <Text className="font-sans text-[12px] text-ink-muted">{symbol}</Text>
+                <Text className="font-sans text-[12px] text-ink-muted">{symbol} · Tap to change asset</Text>
               </View>
             </View>
 
-            <View className="rounded-xl bg-chip px-3 py-1.5">
-              <Text className="font-sans-bold text-[12px] text-navy">Deposit Ready</Text>
+            <View className="flex-row items-center gap-1.5 rounded-xl bg-chip px-3 py-1.5">
+              <Text className="font-sans-bold text-[12px] text-navy">{symbol}</Text>
+              <Ionicons name="chevron-down" size={14} color={colors.navy} />
             </View>
-          </View>
+          </Pressable>
 
           {/* Network Selection Pills */}
           {addresses.length > 1 && (
             <View className="mb-4">
               <Text className="mb-2 font-sans-bold text-[11px] uppercase tracking-[1.5px] text-ink-muted">
-                Choose Network
+                Choose Supported Network
               </Text>
               <View className="flex-row gap-2">
                 {addresses.map((addr) => {
@@ -234,7 +242,7 @@ export default function ReceiveCryptoScreen() {
             <View className="my-16 items-center justify-center">
               <ActivityIndicator size="large" color={colors.navy} />
               <Text className="mt-3 font-sans text-xs text-ink-muted">
-                Generating your secure deposit address…
+                Retrieving your Quidax {symbol} deposit address…
               </Text>
             </View>
           ) : (
@@ -253,7 +261,7 @@ export default function ReceiveCryptoScreen() {
                 <View className="mt-4 flex-row items-center gap-1.5 rounded-full bg-chip px-3.5 py-1">
                   <View className="h-2 w-2 rounded-full bg-mint" />
                   <Text className="font-sans-bold text-[11px] text-navy">
-                    {activeAddress.network_name}
+                    Network: {activeAddress.network_name} ({activeAddress.network})
                   </Text>
                 </View>
 
@@ -263,6 +271,14 @@ export default function ReceiveCryptoScreen() {
                     {activeAddress.address}
                   </Text>
                 </View>
+
+                {activeAddress.memo ? (
+                  <View className="mt-2.5 w-full rounded-xl bg-amber-bg/60 px-3 py-2 border border-amber/30">
+                    <Text className="text-center font-sans-bold text-[11px] text-ink">
+                      Destination Tag / Memo: {activeAddress.memo}
+                    </Text>
+                  </View>
+                ) : null}
 
                 {/* Actions: Copy & Share */}
                 <View className="mt-4 w-full flex-row gap-2.5">
@@ -299,6 +315,20 @@ export default function ReceiveCryptoScreen() {
                       Share address
                     </Text>
                   </Pressable>
+                </View>
+              </View>
+
+              {/* Network Warning & Deposit Instructions Banner */}
+              <View className="mt-4 flex-row items-start gap-3 rounded-[20px] border border-amber/40 bg-amber-bg/40 p-4">
+                <Ionicons name="warning-outline" size={20} color="#D97706" />
+                <View className="flex-1">
+                  <Text className="font-sans-bold text-[12.5px] text-ink">
+                    Important Network Warning
+                  </Text>
+                  <Text className="mt-1 font-sans text-[11.5px] leading-[17px] text-ink-soft">
+                    {activeAddress.warning ||
+                      `Only send ${symbol} on the ${activeAddress.network_name} (${activeAddress.network}) network to this address. Sending any other coin or using the wrong network may result in permanent loss of funds.`}
+                  </Text>
                 </View>
               </View>
 
@@ -366,6 +396,53 @@ export default function ReceiveCryptoScreen() {
                 </View>
               </View>
 
+              {/* Recent Deposit History & Status */}
+              <View className="mt-4 rounded-[22px] border border-line bg-surface p-4">
+                <View className="flex-row items-center justify-between mb-2">
+                  <Text className="font-sans-bold text-[13px] text-ink">
+                    Recent {symbol} Deposits
+                  </Text>
+                  <Pressable onPress={() => router.push('/crypto/history')}>
+                    <Text className="font-sans-bold text-[11.5px] text-navy">
+                      All Crypto History &rarr;
+                    </Text>
+                  </Pressable>
+                </View>
+
+                {recentDeposits.length === 0 ? (
+                  <Text className="py-3 font-sans text-xs text-ink-muted">
+                    No incoming {symbol} deposits yet. Deposits are automatically monitored via Quidax webhooks.
+                  </Text>
+                ) : (
+                  recentDeposits.slice(0, 5).map((dep, idx) => (
+                    <View
+                      key={dep.id}
+                      className={`flex-row items-center justify-between py-2.5 ${
+                        idx < Math.min(recentDeposits.length, 5) - 1 ? 'border-b border-line-soft' : ''
+                      }`}
+                    >
+                      <View className="flex-1 pr-2">
+                        <Text className="font-sans-bold text-xs text-ink">
+                          +{formatCrypto(dep.net_amount ?? dep.amount, 6)} {dep.symbol} ({dep.network})
+                        </Text>
+                        <Text className="font-sans text-[10.5px] text-ink-muted mt-0.5">
+                          {dep.converted_to_naira && dep.naira_amount
+                            ? `Auto-converted to ${formatNaira(dep.naira_amount)}`
+                            : `Credited to ${dep.symbol} wallet`}
+                        </Text>
+                      </View>
+                      <View className="items-end">
+                        <View className="rounded-full bg-mint-bg px-2.5 py-0.5">
+                          <Text className="font-sans-bold text-[10px] uppercase text-mint-dark">
+                            {dep.status}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  ))
+                )}
+              </View>
+
               {/* Action Buttons: Convert to Naira & Test Simulate */}
               <View className="mt-4 gap-2.5">
                 <Button
@@ -389,6 +466,57 @@ export default function ReceiveCryptoScreen() {
           )}
         </ScrollView>
       </SafeAreaView>
+
+      {/* Coin Picker Modal */}
+      <Modal
+        visible={coinPickerVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setCoinPickerVisible(false)}
+      >
+        <Pressable
+          className="flex-1 justify-end bg-navy-darkest/60"
+          onPress={() => setCoinPickerVisible(false)}
+        >
+          <View className="rounded-t-[32px] bg-surface px-6 pb-8 pt-4">
+            <View className="items-center pb-3">
+              <View className="h-1 w-11 rounded-full bg-line-input" />
+            </View>
+            <Text className="mb-3 font-sans-extrabold text-base text-ink">
+              Select Cryptocurrency to Receive
+            </Text>
+            {(Object.keys(COIN_CONFIG) as Coin['symbol'][]).map((s) => {
+              const cfg = COIN_CONFIG[s];
+              const isSelected = s === symbol;
+              return (
+                <Pressable
+                  key={s}
+                  onPress={() => {
+                    setSymbol(s);
+                    setCoinPickerVisible(false);
+                  }}
+                  className={`flex-row items-center justify-between border-b border-line-soft py-3.5 ${
+                    isSelected ? 'bg-mint-bg/30' : ''
+                  }`}
+                >
+                  <View className="flex-row items-center gap-3">
+                    <View className={`h-9 w-9 items-center justify-center rounded-xl ${cfg.logoBg}`}>
+                      <Text className="font-sans-bold text-sm text-white">{cfg.glyph}</Text>
+                    </View>
+                    <View>
+                      <Text className="font-sans-bold text-sm text-ink">{cfg.name}</Text>
+                      <Text className="font-sans text-xs text-ink-muted">{s}</Text>
+                    </View>
+                  </View>
+                  {isSelected ? (
+                    <Ionicons name="checkmark-circle" size={20} color={colors.navy} />
+                  ) : null}
+                </Pressable>
+              );
+            })}
+          </View>
+        </Pressable>
+      </Modal>
 
       {/* Simulated Deposit Sheet / Modal */}
       <Modal

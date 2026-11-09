@@ -713,46 +713,51 @@ export default function SavingsScreen() {
                       />
                     </View>
 
-                    <View style={styles.planNameCol}>
-                      <View style={styles.planTitleLine}>
-                        <Text style={[styles.planTitle, isSuspended && styles.planTitleDisabled]}>
-                          {plan.name}
-                        </Text>
-                        <View
-                          style={[
-                            styles.planBadge,
-                            {
-                              backgroundColor: isSuspended ? '#F1F5F9' : plan.badgeBg,
-                            },
-                          ]}
-                        >
+                    <View style={styles.planMainCol}>
+                      <View style={styles.planHeaderRow}>
+                        <View style={styles.planTitleBadgeGroup}>
                           <Text
+                            style={[styles.planTitle, isSuspended && styles.planTitleDisabled]}
+                          >
+                            {plan.name}
+                          </Text>
+                          <View
                             style={[
-                              styles.planBadgeText,
+                              styles.planBadge,
                               {
-                                color: isSuspended ? '#64748B' : plan.badgeText,
+                                backgroundColor: isSuspended ? '#F1F5F9' : plan.badgeBg,
                               },
                             ]}
                           >
-                            {isSuspended ? 'SUSPENDED' : plan.badge}
+                            <Text
+                              style={[
+                                styles.planBadgeText,
+                                {
+                                  color: isSuspended ? '#64748B' : plan.badgeText,
+                                },
+                              ]}
+                            >
+                              {isSuspended ? 'SUSPENDED' : plan.badge}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.planRateCol}>
+                          <Text
+                            style={[
+                              styles.planRateText,
+                              { color: isSuspended ? '#94A3B8' : plan.themeColor },
+                            ]}
+                          >
+                            {plan.rate}
                           </Text>
+                          <Text style={styles.planRateLabel}>Annual Yield</Text>
                         </View>
                       </View>
-                      <Text style={styles.planTagline} numberOfLines={1}>
+
+                      <Text style={styles.planTagline}>
                         {isSuspended ? 'Temporarily disabled by admin' : plan.tagline}
                       </Text>
-                    </View>
-
-                    <View style={styles.planRateCol}>
-                      <Text
-                        style={[
-                          styles.planRateText,
-                          { color: isSuspended ? '#94A3B8' : plan.themeColor },
-                        ]}
-                      >
-                        {plan.rate}
-                      </Text>
-                      <Text style={styles.planRateLabel}>Annual Yield</Text>
                     </View>
                   </View>
 
@@ -1847,7 +1852,7 @@ const styles = StyleSheet.create({
   },
   planCardTop: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 12,
   },
   planIconBox: {
@@ -1857,47 +1862,68 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
+    marginTop: 1,
   },
-  planNameCol: {
+  planMainCol: {
     flex: 1,
+    minWidth: 0,
   },
-  planTitleLine: {
+  planHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 42,
+    gap: 8,
+  },
+  planTitleBadgeGroup: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: 6,
+    minWidth: 0,
   },
   planTitle: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 14.5,
+    lineHeight: 20,
     color: colors.navy,
   },
   planBadge: {
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 2.5,
     borderRadius: 6,
   },
   planBadgeText: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 9,
+    lineHeight: 12,
     letterSpacing: 0.5,
   },
   planTagline: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 11.5,
+    lineHeight: 16.5,
     color: colors.inkMuted,
-    marginTop: 2,
+    marginTop: 6,
   },
   planRateCol: {
+    flexShrink: 0,
     alignItems: 'flex-end',
+    justifyContent: 'center',
+    paddingLeft: 4,
   },
   planRateText: {
     fontFamily: 'SpaceGrotesk_700Bold',
-    fontSize: 14.5,
+    fontSize: 15,
+    lineHeight: 19,
   },
   planRateLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Manrope_600SemiBold',
     fontSize: 10,
+    lineHeight: 13,
     color: colors.inkMuted,
+    marginTop: 2,
   },
   planFooterRow: {
     flexDirection: 'row',
@@ -1912,6 +1938,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flexShrink: 1,
+    minWidth: 0,
   },
   planBalanceLabel: {
     fontFamily: 'Manrope_600SemiBold',
@@ -1927,6 +1955,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+    flexShrink: 0,
   },
   planCtaText: {
     fontFamily: 'Manrope_700Bold',

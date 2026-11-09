@@ -7,7 +7,8 @@ import type {
   CryptoQuote,
   CryptoSendFee,
   CryptoSendPayload,
-  CryptoSendResponse,
+  CryptoTransactionRecord,
+  Paginated,
   SimulatedDepositResponse,
   Transaction,
 } from '@/types';
@@ -61,8 +62,9 @@ export async function simulateDeposit(params: {
 export async function getQuote(params: {
   side: 'buy' | 'sell';
   symbol: Coin['symbol'];
-  /** For buys: NGN to spend. For sells: crypto amount to sell. */
+  /** For buys: NGN to spend (or crypto if amount_type='crypto'). For sells: crypto amount to sell. */
   amount: number;
+  amount_type?: 'fiat' | 'crypto';
 }): Promise<CryptoQuote> {
   const { data } = await api.post<{ data: CryptoQuote }>('/crypto/quote', params);
   return data.data;
@@ -73,6 +75,7 @@ export async function placeOrder(params: {
   symbol: Coin['symbol'];
   amount: number;
   pin: string;
+  idempotency_key?: string;
 }): Promise<Transaction> {
   const { data } = await api.post<{ data: Transaction }>('/crypto/orders', params);
   return data.data;
@@ -82,10 +85,23 @@ export async function getSendFee(params: {
   symbol: Coin['symbol'];
   destination_type: 'gutter_user' | 'external_address';
   network?: string;
+  amount?: number;
 }): Promise<CryptoSendFee> {
   const { data } = await api.get<{ data: CryptoSendFee }>('/crypto/send/fee', {
     params,
   });
+  return data.data;
+}
+
+export async function validateCryptoAddress(params: {
+  symbol: Coin['symbol'];
+  network: string;
+  address: string;
+}): Promise<{ valid: boolean; message: string }> {
+  const { data } = await api.post<{ data: { valid: boolean; message: string } }>(
+    '/crypto/validate-address',
+    params
+  );
   return data.data;
 }
 
@@ -94,5 +110,22 @@ export async function sendCrypto(params: CryptoSendPayload): Promise<Transaction
   return data.data.transaction;
 }
 
+export async function getCryptoTransactions(params?: {
+  type?: string;
+  symbol?: string;
+  network?: string;
+  status?: string;
+  search?: string;
+  page?: number;
+  per_page?: number;
+}): Promise<Paginated<CryptoTransactionRecord>> {
+  const { data } = await api.get<Paginated<CryptoTransactionRecord>>('/crypto/transactions', {
+    params,
+  });
+  return data;
+}
 
-
+export async function getCryptoTransaction(id: number | string): Promise<CryptoTransactionRecord> {
+  const { data } = await api.get<{ data: CryptoTransactionRecord }>(`/crypto/transactions/${id}`);
+  return data.data;
+}
